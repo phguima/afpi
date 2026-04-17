@@ -39,15 +39,27 @@ fi
 prompt "Installing required Ansible collections..."
 ansible-galaxy collection install community.general
 
-# 3. Check for group_vars/all.yml
-if [ ! -f "group_vars/all.yml" ]; then
-    error "group_vars/all.yml not found. Please ensure you are in the root of the afpi project."
+# 3. Check for project structure
+if [ ! -f "group_vars/all/all.yml" ]; then
+    error "Structure 'group_vars/all/all.yml' not found. Please ensure you are in the root of the afpi project."
     exit 1
 fi
 
-# 4. Instructions
+# 4. Vault Check
+if [ -f "group_vars/all/secrets.yml" ]; then
+    if ! grep -q "\$ANSIBLE_VAULT" "group_vars/all/secrets.yml"; then
+        warn "Note: 'group_vars/all/secrets.yml' is NOT encrypted. Consider running:"
+        echo -e "      ${C_YELLOW}ansible-vault encrypt group_vars/all/secrets.yml${C_RESET}"
+    fi
+fi
+
+# 5. Final Instructions
 echo ""
 prompt "Bootstrap complete! You can now run the AFPI playbook using:"
-echo -e "${C_GREEN}ansible-playbook -i inventory.ini site.yml${C_RESET}"
+echo -e "${C_GREEN}ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass${C_RESET}"
 echo ""
-warn "Note: Some tasks (like NVIDIA driver install) may require manual confirmation or a system reboot."
+warn "Required flags:"
+echo -e "  -K               : Prompts for your sudo password."
+echo -e "  --ask-vault-pass : Prompts for your Ansible Vault password (if secrets are encrypted)."
+echo ""
+warn "Note: Some tasks (like NVIDIA driver install) require a system reboot to complete."
