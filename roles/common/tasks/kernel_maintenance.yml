@@ -22,8 +22,9 @@
   tags: [system, kernel]
 
 - name: Kernel | Disable debug repositories
-  ansible.builtin.shell: dnf config-manager --set-disabled "*debug*"
+  ansible.builtin.shell: dnf config-manager setopt "*debug*".enabled=0
   changed_when: false
+  failed_when: false
   tags: [system, kernel]
 
 - name: Kernel | Get list of old kernels
