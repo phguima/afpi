@@ -13,6 +13,5 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
-roles/desktop/files/wallpaper_1.jpg
 roles/desktop/files/profile_1.jpg
-# (Nota: É melhor não subir imagens pessoais pesadas no repo principal)
+# (Nota: O wallpaper_1.jpg foi liberado para o repo. A foto de perfil fica no Vault).

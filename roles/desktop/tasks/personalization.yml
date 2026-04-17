@@ -12,11 +12,12 @@
 
 - name: Personalize | Copy wallpaper to system directory
   ansible.builtin.copy:
-    src: "files/{{ system_wallpaper }}"
+    src: "{{ system_wallpaper }}"
     dest: "/usr/share/backgrounds/afpi/{{ system_wallpaper }}"
     owner: root
     group: root
     mode: '0644'
+  ignore_errors: "{{ ansible_check_mode }}"
   tags: [personalization, wallpaper]
 
 - name: Personalize | Copy profile picture to user home

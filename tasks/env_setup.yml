@@ -56,9 +56,9 @@
   tags: [hardware]
 
 - name: Env Setup | Check for proprietary NVIDIA driver
-  ansible.builtin.command: nvidia-smi
+  ansible.builtin.shell: "command -v nvidia-smi && nvidia-smi"
   register: nvidia_smi_check_raw
-  ignore_errors: yes 
+  failed_when: false
   changed_when: false
   tags: [hardware, detection, nvidia]
 
