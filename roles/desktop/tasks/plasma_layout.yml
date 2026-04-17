@@ -3,7 +3,7 @@
 
 # --- Detecção de Hardware para o Template ---
 - name: Plasma Layout | Detect Root Disk UUID
-  ansible.builtin.shell: lsblk -no UUID /dev/$(lsblk -no PKNAME $(findmnt -no SOURCE /))
+  ansible.builtin.shell: findmnt -no UUID /
   register: root_disk_uuid
   changed_when: false
   tags: [kde, layout, detection]
