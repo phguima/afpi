@@ -154,3 +154,62 @@
   changed_when: false
   when: user_name != 'root'
   tags: [software, steam, gpu]
+
+# --- Browser Cedilla Fix (X11 Ozone) ---
+- name: Cedilla | Copy Brave desktop file to local share
+  ansible.builtin.copy:
+    src: /usr/share/applications/brave-browser.desktop
+    dest: "{{ user_home }}/.local/share/applications/brave-browser.desktop"
+    remote_src: yes
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0644'
+    force: no
+  when: 
+    - user_name != 'root'
+    - not ansible_check_mode
+  tags: [brave, cedilla]
+
+- name: Cedilla | Configure Brave to use X11 ozone platform
+  ansible.builtin.replace:
+    path: "{{ user_home }}/.local/share/applications/brave-browser.desktop"
+    regexp: '^Exec=((?!.*--ozone-platform=x11).*?)(\s+(%[uU]|--incognito|--new-window))?$'
+    replace: 'Exec=\1 --ozone-platform=x11\2'
+  when: 
+    - user_name != 'root'
+    - not ansible_check_mode
+  tags: [brave, cedilla]
+
+- name: Cedilla | Copy Chromium desktop file to local share
+  ansible.builtin.copy:
+    src: /usr/share/applications/chromium-browser.desktop
+    dest: "{{ user_home }}/.local/share/applications/chromium-browser.desktop"
+    remote_src: yes
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0644'
+    force: no
+  when: 
+    - user_name != 'root'
+    - not ansible_check_mode
+  tags: [chromium, cedilla]
+
+- name: Cedilla | Configure Chromium to use X11 ozone platform
+  ansible.builtin.replace:
+    path: "{{ user_home }}/.local/share/applications/chromium-browser.desktop"
+    regexp: '^Exec=((?!.*--ozone-platform=x11).*?)(\s+(%[uU]|--incognito|--new-window))?$'
+    replace: 'Exec=\1 --ozone-platform=x11\2'
+  when: 
+    - user_name != 'root'
+    - not ansible_check_mode
+  tags: [chromium, cedilla]
+
+- name: Cedilla | Update desktop database for browsers
+  ansible.builtin.command:
+    cmd: "update-desktop-database {{ user_home }}/.local/share/applications/"
+  become_user: "{{ user_name }}"
+  changed_when: false
+  when: 
+    - user_name != 'root'
+    - not ansible_check_mode
+  tags: [brave, chromium, cedilla]
