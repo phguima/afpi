@@ -1,0 +1,18 @@
+# Ansible temporary files
+*.retry
+*.pyc
+.vault_pass
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+roles/desktop/files/wallpaper_1.jpg
+roles/desktop/files/profile_1.jpg
+# (Nota: É melhor não subir imagens pessoais pesadas no repo principal)

@@ -1,0 +1,79 @@
+---
+# Visual Personalization (KDE Plasma & SDDM)
+
+- name: Personalize | Create backgrounds directory
+  ansible.builtin.file:
+    path: /usr/share/backgrounds/afpi
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags: [personalization, wallpaper]
+
+- name: Personalize | Copy wallpaper to system directory
+  ansible.builtin.copy:
+    src: "{{ system_wallpaper }}"
+    dest: "/usr/share/backgrounds/afpi/{{ system_wallpaper }}"
+    owner: root
+    group: root
+    mode: '0644'
+  tags: [personalization, wallpaper]
+
+- name: Personalize | Copy profile picture to user home
+  ansible.builtin.copy:
+    content: "{{ user_profile_picture_base64 | b64decode }}"
+    dest: "{{ user_home }}/.face.icon"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0644'
+  when: 
+    - user_name != 'root'
+    - user_profile_picture_base64 is defined
+  tags: [personalization, profile]
+
+- name: Personalize | Copy profile picture (fallback from file)
+  ansible.builtin.copy:
+    src: "{{ user_profile_picture }}"
+    dest: "{{ user_home }}/.face.icon"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0644'
+  when: 
+    - user_name != 'root'
+    - user_profile_picture_base64 is not defined
+    - user_profile_picture is defined
+  tags: [personalization, profile]
+
+# --- SDDM Wallpaper ---
+# Most SDDM themes (like Breeze) look into /etc/sddm.conf.d/
+- name: Personalize | Configure SDDM background
+  community.general.ini_file:
+    path: /etc/sddm.conf.d/kde_settings.conf
+    section: Theme
+    option: Background
+    value: "/usr/share/backgrounds/afpi/{{ system_wallpaper }}"
+    owner: root
+    mode: '0644'
+  when: is_kde
+  tags: [personalization, wallpaper, sddm]
+
+# --- User Profile Picture (AccountsService) ---
+- name: Personalize | Ensure AccountsService user directory exists
+  ansible.builtin.file:
+    path: /var/lib/AccountsService/users
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags: [personalization, profile]
+
+- name: Personalize | Set profile picture in AccountsService
+  community.general.ini_file:
+    path: "/var/lib/AccountsService/users/{{ user_name }}"
+    section: User
+    option: Icon
+    value: "{{ user_home }}/.face.icon"
+    owner: root
+    mode: '0644'
+  when: user_name != 'root'
+  tags: [personalization, profile]

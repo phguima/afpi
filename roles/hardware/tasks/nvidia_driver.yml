@@ -1,0 +1,105 @@
+---
+# NVIDIA proprietary driver installation (signed)
+
+- name: NVIDIA | Check if NVIDIA GPU is present
+  set_fact:
+    is_nvidia_present: "{{ is_nvidia | default(false) }}"
+
+- name: NVIDIA | Check if NVIDIA drivers are already installed
+  ansible.builtin.command: nvidia-smi
+  register: nvidia_installed_check
+  failed_when: false
+  changed_when: false
+
+- name: NVIDIA | Driver Installation Block
+  block:
+    - name: NVIDIA | Show Installation Warning
+      ansible.builtin.pause:
+        prompt: |
+          >>> IMPORTANT <<<
+          Installing nVidia drivers requires some manual procedures.
+          Some packages will be installed and a key for secure boot will be created
+          to be enrolled in the system on the next reboot.
+          
+          A password must be created now for the MOK enrollment.
+          This password will be requested the next time the system is started.
+          
+          Press [Enter] to continue or Ctrl+C to abort...
+
+    - name: NVIDIA | Ensure RPM Fusion Non-Free is enabled
+      ansible.builtin.dnf:
+        name: 
+          - "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+        state: present
+        disable_gpg_check: yes
+
+    - name: NVIDIA | Enable fedora-cisco-openh264 repository
+      ansible.builtin.command: dnf config-manager setopt fedora-cisco-openh264.enabled=1
+      changed_when: false
+
+    - name: NVIDIA | Install prerequisites
+      ansible.builtin.dnf:
+        name: [akmods, kmodtool, openssl, mokutil]
+        state: present
+
+    - name: NVIDIA | Generate MOK key
+      ansible.builtin.command: kmodgenca -a
+      args:
+        creates: /etc/pki/akmods/certs/public_key.der
+
+    - name: NVIDIA | Check if MOK key needs enrollment
+      ansible.builtin.command: mokutil --test-key /etc/pki/akmods/certs/public_key.der
+      register: mok_test
+      failed_when: false
+      changed_when: false
+
+    - name: NVIDIA | Import MOK key (Secure Boot)
+      ansible.builtin.shell: |
+        echo -e "{{ mok_password | default('fedora') }}\n{{ mok_password | default('fedora') }}" | mokutil --import /etc/pki/akmods/certs/public_key.der
+      when: mok_test.rc != 0
+      no_log: true 
+
+    - name: NVIDIA | Install NVIDIA drivers and related packages
+      ansible.builtin.dnf:
+        name:
+          - akmod-nvidia
+          - gcc
+          - kernel-devel
+          - kernel-headers
+          - xorg-x11-drv-nvidia
+          - xorg-x11-drv-nvidia-cuda
+          - xorg-x11-drv-nvidia-libs
+          - xorg-x11-drv-nvidia-libs.i686
+          - vulkan
+          - xorg-x11-drv-nvidia-cuda-libs
+        state: present
+
+    - name: NVIDIA | Wait for kernel modules (akmods) to build
+      ansible.builtin.shell: |
+        while pgrep -f "akmods" > /dev/null || pgrep -f "rpmbuild" > /dev/null; do
+          sleep 5
+        done
+      async: 600
+      poll: 10
+      changed_when: false
+
+    - name: NVIDIA | Force akmods and dracut
+      ansible.builtin.shell: |
+        akmods --force
+        dracut --force
+      changed_when: true
+
+    - name: NVIDIA | Mark akmod-nvidia as user installed
+      ansible.builtin.command: dnf mark user akmod-nvidia
+      changed_when: false
+
+    - name: NVIDIA | Recommend Reboot
+      ansible.builtin.debug:
+        msg: 
+          - "NVIDIA installation complete."
+          - "A system REBOOT is REQUIRED to enroll the MOK key and load the drivers."
+          - "MOK Password used: {{ mok_password | default('fedora') }}"
+
+  when: 
+    - is_nvidia_present
+    - nvidia_installed_check.rc != 0

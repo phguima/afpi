@@ -1,0 +1,155 @@
+---
+# DNF Optimization
+dnf_max_parallel_downloads: 15
+dnf_fastestmirror: "True"
+
+# System Settings
+system_hostname: "argus"
+
+# GRUB Settings
+grub_timeout: 5
+grub_gfxmode: "1920x1080x32,1280x720x32,auto"
+grub_gfxpayload: "keep"
+grub_terminal_output: "gfxterm"
+
+# Hardware Drivers
+intel_media_packages:
+  - libva-intel-driver
+  - intel-media-driver
+  - libvdpau-va-gl
+
+amd_multimedia_packages:
+  - mesa-va-drivers-freeworld
+  - mesa-vdpau-drivers-freeworld
+  - libva-utils
+  - vdpauinfo
+
+# Multimedia Packages
+multimedia_packages:
+  - "@multimedia"
+  - gstreamer1-plugins-bad-free-extras
+  - gstreamer1-plugins-bad-freeworld
+  - gstreamer1-plugins-ugly
+  - gstreamer1-libav
+
+nvidia_multimedia_packages:
+  - libva-nvidia-driver
+  - xorg-x11-drv-nvidia-cuda-libs
+
+# Packages and Apps
+dnf_packages_common:
+  - argyllcms
+  - btrfs-assistant
+  - chromium
+  - clamav
+  - clamav-update
+  - darktable
+  - fastfetch
+  - hwinfo
+  - lm_sensors
+  - nodejs
+  - nvtop
+  - pipx
+  - python3-pip
+  - p7zip
+  - p7zip-plugins
+  - rawtherapee
+  - solaar
+  - steam
+  - testdisk
+  - tmux
+  - tuptime
+  - unrar
+  - unzip
+  - vim
+  - VirtualBox
+  - vlc
+  - vlc-bittorrent
+
+dnf_packages_gnome:
+  - flatseal
+  - gnome-tweaks
+
+dnf_packages_kde:
+  - ktorrent
+
+# Flatpak Apps
+flatpak_apps_common:
+  - com.bitwarden.desktop
+  - com.dec05eba.gpu_screen_recorder
+  - com.google.AndroidStudio
+  - com.jetbrains.IntelliJ-IDEA-Ultimate
+  - com.slack.Slack
+  - com.spotify.Client
+  - net.displaycal.DisplayCAL
+  - org.ferdium.Ferdium
+  - org.zotero.Zotero
+  - us.zoom.Zoom
+
+flatpak_apps_gnome:
+  - com.github.unrud.VideoDownloader
+  - com.mattjakeman.ExtensionManager
+  - de.haeckerfelix.Fragments
+
+flatpak_apps_kde:
+  - com.markopejic.downloader
+
+fonts_packages:
+  - fira-code-fonts
+  - google-roboto-fonts
+
+# ASUS ROG Settings
+asus_copr_repo: "lukenukem/asus-linux"
+asus_packages:
+  - asusctl
+  - supergfxctl
+  - asusctl-rog-gui
+
+# Brave Browser Settings
+brave_gpg_key: "https://brave-browser-rpm-release.s3.brave.com/brave-core.asc"
+brave_repo_url: "https://brave-browser-rpm-release.s3.brave.com/x86_64/"
+
+# ProtonVPN Settings
+protonvpn_repo_url: "https://repo.protonvpn.com/fedora-{{ ansible_distribution_major_version }}-stable/protonvpn-stable-release/protonvpn-stable-release-1.0.3-1.noarch.rpm"
+
+# VS Code Settings
+vscode_gpg_key: "https://packages.microsoft.com/keys/microsoft.asc"
+vscode_repo_url: "https://packages.microsoft.com/yumrepos/vscode"
+
+# Oh-My-Zsh settings
+omz_install_script_url: "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
+omz_theme_name: "kali-like-alt"
+omz_plugins:
+  - git
+# Nota: zsh-autosuggestions e zsh-syntax-highlighting são gerenciados internamente pelo tema kali-like-alt.
+
+
+# Zsh Aliases
+zsh_aliases: |
+  alias zshconfig="nano ~/.zshrc"
+  alias ohmyzsh="nano ~/.oh-my-zsh"
+  alias lls="ls --color -lh --group-directories-first"
+  alias llsa="ls --color -lha --group-directories-first"
+  alias gemini-update="sudo npm install -g @google/gemini-cli"
+  alias geminicli="cd ~/wks && clear && gemini"
+  alias open-thevoid="sudo cryptsetup open /dev/nvme0n1p3 thevoid"
+  alias close-thevoid="sudo cryptsetup close thevoid"
+  alias clean-cache="sudo sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
+  alias nvidia-run="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0"
+
+# Personalization
+user_profile_picture: "profile_1.jpg"
+system_wallpaper: "wallpaper_1.jpg"
+
+# PTYxis Settings
+ptyxis_restore_window_size: "false"
+ptyxis_default_columns: 120
+ptyxis_default_rows: 35
+ptyxis_cursor_shape: "underline"
+ptyxis_cursor_blink_mode: "on"
+ptyxis_use_system_font: "false"
+ptyxis_font_name: "Fira Code 10"
+ptyxis_opacity: 0.95
+
+# Secrets (Moved to group_vars/secrets.yml)
+# Reference the variables there and encrypt the file with ansible-vault.

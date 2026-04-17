@@ -1,0 +1,156 @@
+---
+# Tasks for 'apps' role
+
+# --- DNF Software Installation ---
+- name: Software | Install KDE specific DNF packages
+  ansible.builtin.dnf:
+    name: "{{ dnf_packages_kde }}"
+    state: present
+  when: is_kde
+  tags: [software, dnf, kde]
+
+- name: Software | Install GNOME specific DNF packages
+  ansible.builtin.dnf:
+    name: "{{ dnf_packages_gnome }}"
+    state: present
+  when: is_gnome
+  tags: [software, dnf, gnome]
+
+- name: Software | Install DNF packages
+  ansible.builtin.dnf:
+    name: "{{ dnf_packages_common }}"
+    state: present
+  tags: [software, dnf, common]
+
+# --- Flatpak Applications ---
+- name: System | Enable Flathub Repository
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+  tags: [system, flatpak]
+
+- name: Software | Install KDE specific flatpak applications
+  community.general.flatpak:
+    name: "{{ item }}"
+    state: present
+    remote: flathub
+  loop: "{{ flatpak_apps_kde }}"
+  when: is_kde
+  tags: [software, flatpak, kde]
+
+- name: Software | Install GNOME specific flatpak applications
+  community.general.flatpak:
+    name: "{{ item }}"
+    state: present
+    remote: flathub
+  loop: "{{ flatpak_apps_gnome }}"
+  when: is_gnome
+  tags: [software, flatpak, gnome]
+
+- name: Software | Install flatpak applications
+  community.general.flatpak:
+    name: "{{ item }}"
+    state: present
+    remote: flathub
+  loop: "{{ flatpak_apps_common }}"
+  tags: [software, flatpak, common]
+
+# --- Brave Installation ---
+- name: Brave | Add Brave repository
+  ansible.builtin.yum_repository:
+    name: brave-browser
+    description: Brave Browser
+    baseurl: "{{ brave_repo_url }}"
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: "{{ brave_gpg_key }}"
+  tags: [software, brave]
+
+- name: Brave | Install Brave
+  ansible.builtin.dnf:
+    name: brave-browser
+    state: present
+  tags: [software, brave]
+
+# --- Visual Studio Code Installation ---
+- name: VSCode | Add Visual Studio Code repository
+  ansible.builtin.yum_repository:
+    name: code
+    description: Visual Studio Code
+    baseurl: "{{ vscode_repo_url }}"
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: "{{ vscode_gpg_key }}"
+  tags: [software, vscode]
+
+- name: VSCode | Install Visual Studio Code
+  ansible.builtin.dnf:
+    name: code
+    state: present
+  tags: [software, vscode]
+
+# --- ProtonVPN Installation ---
+- name: ProtonVPN | Install ProtonVPN repository
+  ansible.builtin.dnf:
+    name: "{{ protonvpn_repo_url }}"
+    state: present
+    disable_gpg_check: yes
+  tags: [software, protonvpn]
+
+- name: ProtonVPN | Refresh DNF cache
+  ansible.builtin.dnf:
+    update_cache: yes
+  changed_when: false
+  tags: [software, protonvpn]
+
+- name: ProtonVPN | Install ProtonVPN
+  ansible.builtin.dnf:
+    name: 
+      - proton-vpn-gnome-desktop
+    state: present
+  register: proton_install
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [software, protonvpn]
+
+- name: ProtonVPN | Verify ProtonVPN installation
+  ansible.builtin.command: rpm -q proton-vpn-gnome-desktop
+  changed_when: false
+  failed_when: false
+  register: protonvpn_check
+  tags: [software, protonvpn]
+
+- name: ProtonVPN | Report ProtonVPN status
+  ansible.builtin.debug:
+    msg: "ProtonVPN was installed successfully (despite potential scriptlet warnings)."
+  when: protonvpn_check.rc == 0
+  tags: [software, protonvpn]
+
+# --- Shortcuts & Overrides ---
+- name: Shortcuts | Create local override for Steam shortcut
+  ansible.builtin.copy:
+    src: /usr/share/applications/steam.desktop
+    dest: "{{ user_home }}/.local/share/applications/steam.desktop"
+    remote_src: yes
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0644'
+    force: no
+  when: user_name != 'root'
+  tags: [software, steam, gpu]
+
+- name: Shortcuts | Update Exec line to use NVIDIA GPU
+  ansible.builtin.replace:
+    path: "{{ user_home }}/.local/share/applications/steam.desktop"
+    regexp: '^Exec=/usr/bin/steam\s+(.*)$'
+    replace: 'Exec=env __NV_PRIME_RENDER_OFFLOAD=1 __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0 __GLX_VENDOR_LIBRARY_NAME=nvidia /usr/bin/steam \1'
+  when: user_name != 'root'
+  tags: [software, steam, gpu]
+
+- name: Shortcuts | Update desktop database
+  ansible.builtin.command:
+    cmd: "update-desktop-database {{ user_home }}/.local/share/applications/"
+  become_user: "{{ user_name }}"
+  changed_when: false
+  when: user_name != 'root'
+  tags: [software, steam, gpu]

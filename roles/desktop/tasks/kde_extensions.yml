@@ -1,0 +1,53 @@
+---
+# KDE Store Extensions (KNS) Installation
+
+# --- Directory Setup ---
+- name: KDE Extensions | Ensure local directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0755'
+  loop:
+    - "{{ user_home }}/.local/share/plasma/plasmoids"
+    - "{{ user_home }}/.local/share/kwin/scripts"
+  when: user_name != 'root'
+  tags: [kde, extensions, setup]
+
+# --- Plasmoids (Widgets) ---
+- name: KDE Extensions | Install Plasma Widgets (Plasmoids)
+  ansible.builtin.command:
+    cmd: "kpackagetool6 -i {{ item.url }} --type=plasma-applet"
+  become_user: "{{ user_name }}"
+  register: plasmoid_install
+  failed_when: false
+  changed_when: "'Successfully installed' in plasmoid_install.stdout"
+  loop:
+    - { name: 'Advanced Modern Clock', url: 'https://store.kde.org/dl/2344806' }
+    - { name: 'Panel Colorizer', url: 'https://store.kde.org/dl/2130967' }
+  when: is_kde and user_name != 'root'
+  tags: [kde, extensions, widgets]
+
+# --- KWin Scripts ---
+- name: KDE Extensions | Install KZones (KWin Script)
+  ansible.builtin.command:
+    cmd: "kpackagetool6 -i https://store.kde.org/dl/1909220 --type=kwinscript"
+  become_user: "{{ user_name }}"
+  register: kwinscript_install
+  failed_when: false
+  changed_when: "'Successfully installed' in kwinscript_install.stdout"
+  when: is_kde and user_name != 'root'
+  tags: [kde, extensions, kwin]
+
+- name: KDE Extensions | Read custom KZones layouts
+  ansible.builtin.set_fact:
+    kzones_layouts_content: "{{ lookup('file', 'kzones_layouts.json') | from_json | to_json(separators=(',', ':')) }}"
+  tags: [kde, extensions, kwin, layouts]
+
+- name: KDE Extensions | Apply custom KZones layouts
+  ansible.builtin.command:
+    cmd: "kwriteconfig6 --file kzonesrc --group General --key Layouts '{{ kzones_layouts_content }}'"
+  become_user: "{{ user_name }}"
+  when: is_kde and user_name != 'root'
+  tags: [kde, extensions, kwin, layouts]

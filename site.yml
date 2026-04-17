@@ -1,0 +1,31 @@
+---
+# Master Playbook for AFPI (Ansible Fedora Post-Install)
+
+- name: AFPI | Fedora Post-Install Setup
+  hosts: localhost
+  become: yes
+
+  pre_tasks:
+    - name: AFPI | Environment Setup
+      ansible.builtin.import_tasks: tasks/env_setup.yml
+      tags: [always]
+
+  roles:
+    - { role: common, tags: [common, system] }
+    - { role: hardware, tags: [hardware, drivers] }
+    - { role: desktop, tags: [desktop, UI] }
+    - { role: apps, tags: [apps, software] }
+    - { role: ai_tools, tags: [ai, gemini] }
+
+  handlers:
+    - name: Regenerate GRUB
+      ansible.builtin.command: grub2-mkconfig -o /etc/grub2-efi.cfg
+
+    - name: Restart Plasmashell
+      ansible.builtin.shell: |
+        kquitapp6 plasmashell || killall plasmashell
+        sleep 2
+        kstart6 plasmashell
+      become_user: "{{ user_name }}"
+      ignore_errors: yes
+      when: is_kde

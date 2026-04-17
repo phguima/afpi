@@ -1,0 +1,74 @@
+---
+# Tasks for 'ai_tools' role
+
+# --- Gemini CLI Installation & Extensions ---
+- name: Software | Install GeminiCLI globally
+  community.general.npm:
+    name: "@google/gemini-cli"
+    global: yes
+    state: present
+  tags: [software, gemini]
+
+- name: Software | Install GeminiCLI extensions for primary user
+  ansible.builtin.command:
+    cmd: "gemini extensions install --consent {{ item.url }}"
+  become_user: "{{ user_name }}"
+  loop:
+    - { name: 'chrome-devtools', url: 'https://github.com/ChromeDevTools/chrome-devtools-mcp' }
+    - { name: 'code-review', url: 'https://github.com/gemini-cli-extensions/code-review' }
+    - { name: 'criticalthink', url: 'https://github.com/abagames/slash-criticalthink' }
+    - { name: 'gemini-cli-jules', url: 'https://github.com/gemini-cli-extensions/jules' }
+    - { name: 'gemini-cli-security', url: 'https://github.com/gemini-cli-extensions/security' }
+    - { name: 'github', url: 'https://github.com/github/github-mcp-server' }
+    - { name: 'google-workspace', url: 'https://github.com/gemini-cli-extensions/workspace' }
+  register: extension_install
+  failed_when: 
+    - extension_install.rc != 0 
+    - "'already installed' not in extension_install.stderr"
+  changed_when: 
+    - extension_install.rc == 0
+    - "'already installed' not in extension_install.stdout"
+    - "'already installed' not in extension_install.stderr"
+  when: user_name != 'root'
+  tags: [gemini, extensions]
+
+# --- Python AI Libraries ---
+- name: Python | Ensure pipx path is in user shell configuration
+  ansible.builtin.command:
+    cmd: "pipx ensurepath"
+  become_user: "{{ user_name }}"
+  changed_when: false
+  tags: [software, python, pipx]
+
+- name: Python | Install specialized python libraries via pipx
+  community.general.pipx:
+    name: "{{ item }}"
+    state: install
+  become_user: "{{ user_name }}"
+  loop:
+    - markitdown
+    - notebooklm-py
+  register: pipx_install
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [software, python, markitdown, notebooklm]
+
+- name: Python | Install extra features and playwright into pipx environments
+  ansible.builtin.command:
+    cmd: "pipx inject {{ item.base }} {{ item.extra }}"
+  become_user: "{{ user_name }}"
+  loop:
+    - { base: 'markitdown', extra: 'markitdown[pdf]' }
+    - { base: 'markitdown', extra: 'markitdown[docx]' }
+    - { base: 'notebooklm-py', extra: 'notebooklm-py[browser]' }
+    - { base: 'notebooklm-py', extra: 'playwright' }
+  changed_when: false
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [software, python, markitdown, notebooklm]
+
+- name: Python | Install Playwright Chromium in notebooklm-py venv
+  ansible.builtin.command:
+    cmd: "{{ user_home }}/.local/share/pipx/venvs/notebooklm-py/bin/playwright install chromium"
+  become_user: "{{ user_name }}"
+  changed_when: false
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [software, python, notebooklm, playwright]
