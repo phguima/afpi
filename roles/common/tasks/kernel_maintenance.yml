@@ -28,7 +28,8 @@
   tags: [system, kernel]
 
 - name: Kernel | Get list of old kernels
-  ansible.builtin.shell: dnf repoquery --installonly --latest-limit=-1 -q
+  ansible.builtin.shell: |
+    dnf repoquery --installonly --latest-limit=-1 -q | grep -v $(uname -r)
   register: old_kernels_list
   changed_when: false
   failed_when: false
@@ -38,5 +39,7 @@
   ansible.builtin.dnf:
     name: "{{ old_kernels_list.stdout_lines }}"
     state: absent
-  when: old_kernels_list.stdout_lines | length > 0
+  when: 
+    - old_kernels_list.stdout_lines | length > 0
+    - not ansible_check_mode
   tags: [system, kernel]
