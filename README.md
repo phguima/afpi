@@ -10,6 +10,7 @@ The project is organized to isolate responsibilities, ensuring idempotency and e
 *   **`hardware`**: Driver detection and installation (Signed NVIDIA for Secure Boot, Intel, AMD), multimedia codecs, and ASUS ROG support.
 *   **`desktop`**: 
     *   **Real Plasma Layout**: Full automation of the KDE layout via Jinja2 templates, preserving widget positions, panels, and transparency settings.
+    *   **Robust Extensions**: Custom widgets (Modern Clock, Panel Colorizer) and scripts (KZones) are installed via a robust manual extraction method that ensures correct naming while remaining fully compatible with **KDE Discover** for future updates.
     *   **Intelligent Detection**: Automatically identifies Disk UUIDs, GPUs, and Battery IDs so monitoring widgets work without manual intervention.
     *   **Visual**: Unified management of wallpapers (Desktop/SDDM) and terminal profiles (Konsole/PTYxis).
 *   **`apps`**: Complete suite via DNF and Flatpak, featuring GPU automation for Steam and productivity tools (Brave, VS Code).
@@ -41,12 +42,6 @@ To avoid uploading your personal photo to the repository, you can store it encry
 2. Add to `secrets.yml`: `user_profile_picture_base64: "CONTENT_FROM_STRING.TXT"`
 3. AFPI will detect the variable and create the `.face.icon` file dynamically.
 
-### Run the Playbook with Secrets
-Whenever there are encrypted files, add `--ask-vault-pass`:
-```bash
-ansible-playbook -i inventory.ini site.yml --ask-vault-pass -K
-```
-
 ## 🚀 Getting Started
 
 ### 1. Bootstrap the System
@@ -55,16 +50,19 @@ Prepare the Ansible environment:
 ./bootstrap.sh
 ```
 
-### 3. Run the Playbook
-Apply the full configuration:
+### 2. Run the Playbook
+Apply the full configuration (the provided `ansible.cfg` is optimized for faster deployment):
 ```bash
-ansible-playbook -i inventory.ini site.yml --ask-vault-pass -K
+ansible-playbook site.yml --ask-vault-pass
 ```
 
 ## 🛠️ AFPI Differentiators
 
 ### Hardware-Aware Configuration
 AFPI interacts with the actual hardware. If you switch machines, it will detect the new Disk UUID and the new battery sensors, adjusting Plasma configuration files dynamically before applying them.
+
+### Plasma 6 & Systemd Integration
+Built specifically for Fedora 43+ and Plasma 6. It uses **Systemd User Sessions** (`systemctl --user`) to manage desktop components and **D-Bus Bridge** injection to ensure all graphical tasks execute correctly via Ansible.
 
 ### Zero-Config Shell
 ZSH configuration has been simplified. The `kali-like-alt` theme manages its own dependencies (syntax highlighting and autosuggestions), reducing playbook complexity and execution time.
