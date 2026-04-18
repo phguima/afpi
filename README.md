@@ -56,14 +56,15 @@ ansible-playbook site.yml --ask-vault-pass
 ```
 
 > [!IMPORTANT]
-> **Usuários NVIDIA:** Para garantir a compatibilidade dos drivers proprietários com o kernel mais recente, é altamente recomendado seguir este fluxo:
-> 1. Execute apenas a atualização do sistema: `ansible-playbook site.yml --tags common --ask-vault-pass`
-> 2. **Reinicie** a máquina para carregar o novo kernel.
-> 3. Execute o playbook completo (ou pule a role common se desejar): `ansible-playbook site.yml --ask-vault-pass`
+> **NVIDIA Users:** To ensure compatibility of proprietary drivers with the latest kernel, it is highly recommended to follow this workflow:
+> 1. Run the system update role only: `ansible-playbook site.yml --tags common --ask-vault-pass`
+> 2. **Reboot** your machine to load the new kernel.
+> 3. Run the full playbook (or skip common if already updated): `ansible-playbook site.yml --ask-vault-pass`
 >
-> **Dica de Controle (Tags):**
-> - Para pular a atualização do sistema se já a fez: `--skip-tags common`
-> - Para pular a instalação dos drivers NVIDIA: `--skip-tags nvidia`
+> **Control Tips (Tags):**
+> - To skip system update if already done: `--skip-tags common`
+> - To skip NVIDIA driver installation: `--skip-tags nvidia`
+
 
 
 ## 🛠️ AFPI Differentiators
