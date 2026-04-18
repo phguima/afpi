@@ -41,7 +41,7 @@
 
 - name: Plasma Layout | Force Wallpaper Application
   ansible.builtin.shell: |
-    export $(dbus-launch)
+    export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
     plasma-apply-wallpaperimage /usr/share/backgrounds/afpi/{{ system_wallpaper }}
   become_user: "{{ user_name }}"
   ignore_errors: yes

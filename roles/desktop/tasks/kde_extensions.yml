@@ -31,8 +31,8 @@
 # --- Installation Phase ---
 - name: KDE Extensions | Install/Upgrade Plasmoids
   ansible.builtin.shell: |
-    kpackagetool6 --type=plasma-applet --install /tmp/afpi_extensions/{{ item.name }}.tar.gz || \
-    kpackagetool6 --type=plasma-applet --upgrade /tmp/afpi_extensions/{{ item.name }}.tar.gz
+    kpackagetool6 --type=Plasma/Applet --install /tmp/afpi_extensions/{{ item.name }}.tar.gz || \
+    kpackagetool6 --type=Plasma/Applet --upgrade /tmp/afpi_extensions/{{ item.name }}.tar.gz
   become_user: "{{ user_name }}"
   loop:
     - { name: 'modern_clock' }
@@ -42,8 +42,8 @@
 
 - name: KDE Extensions | Install/Upgrade KZones (KWin Script)
   ansible.builtin.shell: |
-    kpackagetool6 --type=kwinscript --install /tmp/afpi_extensions/kzones.tar.gz || \
-    kpackagetool6 --type=kwinscript --upgrade /tmp/afpi_extensions/kzones.tar.gz
+    kpackagetool6 --type=KWin/Script --install /tmp/afpi_extensions/kzones.tar.gz || \
+    kpackagetool6 --type=KWin/Script --upgrade /tmp/afpi_extensions/kzones.tar.gz
   become_user: "{{ user_name }}"
   ignore_errors: yes
   tags: [kde, extensions, kwin]
