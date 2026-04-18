@@ -134,7 +134,8 @@
     group: "{{ user_name }}"
     mode: '0755'
   when: user_name != 'root'
-  tags: [software, steam, gpu]
+  tags: [software, shortcuts, system]
+
 
 - name: Shortcuts | Create local override for Steam shortcut
   ansible.builtin.copy:
