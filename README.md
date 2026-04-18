@@ -17,7 +17,16 @@ The project is organized to isolate responsibilities, ensuring idempotency and e
 
 ## 🔐 Secrets Management (Ansible Vault)
 
-AFPI uses **Ansible Vault** to protect sensitive information such as API tokens and passwords.
+AFPI uses **Ansible Vault** to protect sensitive information. Since the provided `group_vars/all/secrets.yml` is encrypted, you must create your own if you fork this project.
+
+### Required Variables in `secrets.yml`
+The following variables must be defined in your secrets file:
+
+| Variable | Description | Example / Usage |
+| :--- | :--- | :--- |
+| `api_keys` | Block of environment exports for your shell | `export SERVICE_API_KEY="your_value_here"` |
+| `mok_password` | Password for NVIDIA MOK enrollment | Used to sign drivers for Secure Boot |
+| `user_profile_picture_base64` | Base64 string of your profile photo | Optional (see instructions below) |
 
 ### Encrypt for the first time
 ```bash
