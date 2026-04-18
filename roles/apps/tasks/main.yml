@@ -126,6 +126,16 @@
   tags: [software, protonvpn]
 
 # --- Shortcuts & Overrides ---
+- name: Shortcuts | Ensure local applications directory exists
+  ansible.builtin.file:
+    path: "{{ user_home }}/.local/share/applications"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0755'
+  when: user_name != 'root'
+  tags: [software, steam, gpu]
+
 - name: Shortcuts | Create local override for Steam shortcut
   ansible.builtin.copy:
     src: /usr/share/applications/steam.desktop
