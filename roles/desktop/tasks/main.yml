@@ -13,16 +13,6 @@
   ansible.builtin.import_tasks: personalization.yml
   tags: [personalization, desktop, visual]
 
-# --- KDE Store Extensions (KNS) ---
-- name: Desktop | KDE Store Components (Widgets/Icons)
-  ansible.builtin.import_tasks: kde_extensions.yml
-  tags: [kde, extensions]
-
-# --- Plasma Desktop Layout ---
-- name: Desktop | Plasma Desktop Layout & Widgets
-  ansible.builtin.import_tasks: plasma_layout.yml
-  tags: [kde, layout]
-
 # --- KDE Specific Configuration ---
 - name: KDE | Ensure konsole directory exists
   ansible.builtin.file:

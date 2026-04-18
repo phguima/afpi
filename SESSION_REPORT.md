@@ -1,40 +1,27 @@
-# AFPI Project Session Report - April 17, 2026 (Final Hardware & UI Hardening)
+# AFPI Project Session Report - April 18, 2026 (Simplification & Stability)
 
 ## 🎯 Objective
-Finalize the real-world deployment on Fedora 43 / Plasma 6, ensuring that custom widgets and layout are applied correctly even when native installers fail.
+Simplify the `desktop` role by removing unstable automation for KDE widgets and layout, focusing on core personalization and system fixes.
 
-## 🏗️ Technical Breakthroughs
+## 🏗️ Technical Changes
 
-### 📂 KDE Extensions "God-Mode" Installation
-- **Problem:** `kpackagetool6` was failing due to complex redirects and metadata errors from the KDE Store.
-- **Solution:** Replaced native installation with **Robust Manual Extraction**.
-- **Impact:** Widgets (Modern Clock, Panel Colorizer) and scripts (KZones) are now manually extracted into the exact directory names required by the `.appletsrc` layout. This bypasses store redirection bugs while maintaining full compatibility with **KDE Discover** for future updates.
+### 📂 Desktop Role Refactoring
+- **Layout Automation Removed:** Deleted `plasma_layout.yml` and the `plasma-appletsrc.j2` template. Experience showed that automated `.appletsrc` manipulation was prone to instability across different Plasma minor versions.
+- **Widgets Automation Removed:** Deleted `kde_extensions.yml` and related installation tasks for Modern Clock, Panel Colorizer, and KZones. These are better managed manually or via Discover for now.
+- **Cleanup:** Removed unused handler `Restart Plasmashell` from `site.yml`.
 
-### 📂 UI Session Integration
-- **D-Bus Session Access:** Refined all GUI-related tasks to use the correct user session bus (`/run/user/UID/bus`).
-- **Systemd Handler:** Replaced the legacy `kstart6` shell command with a modern `systemctl --user restart plasma-plasmashell` handler, ensuring stable desktop restarts after layout changes.
+### 📂 Maintained Features
+- **Visuals:** Wallpaper and Profile Picture (via Vault or file) management remains fully functional.
+- **Terminal Profiles:** Automated setup for Konsole (KDE) and PTYxis (GNOME) is preserved.
+- **Cedilla Fix:** The robust three-layer fix for "ç" is still active and prioritized.
 
-## 🚀 Final Fixes Applied
-
-### 1. Robustness & Privacy
-- **Path Consistency:** Fixed wallpaper paths to ensure the "Force Application" task and the Layout template use the same system-wide path (`/usr/share/backgrounds/afpi/`).
-- **Shortcuts Refactoring:** Centralized the creation of `~/.local/share/applications/` to prevent copy failures for Steam and Browsers.
-- **English Documentation:** Fully translated `README.md` and `SESSION_REPORT.md` for international standards.
-
-### 2. DNF & Core
-- **ProtonVPN Fix:** Implemented explicit cache cleaning (`dnf clean metadata`) before installation to ensure the third-party repo is properly read by DNF.
-
----
-
-## 🔄 How to Resume the Next Session
-To continue, provide the following prompt:
-> **"Nexus, AFPI is fully hardened and tested. Desktop layout and widgets are 100% automated. What's the next optimization for our toolset?"**
+## 🚀 Final State
 
 ### Current State:
-- [x] KDE Widgets installed via manual extraction (Discover-compatible).
-- [x] Plasma 6 Systemd handlers implemented.
-- [x] English documentation updated and attribution-free.
-- [x] Git repository synchronized and clean.
+- [x] Unstable KDE widgets/layout tasks removed.
+- [x] Project structure cleaned (removed obsolete files/templates).
+- [x] README updated to reflect the streamlined scope.
+- [x] Core system optimizations and hardware drivers remain untouched and robust.
 
 ### Final Verification Command:
 ```bash
@@ -42,3 +29,7 @@ ansible-playbook site.yml --ask-vault-pass
 ```
 
 ---
+
+## 🔄 Next Steps
+- Consider a safer way to manage Plasma layouts (e.g., Look and Feel packages) if needed in the future.
+- Focus on Btrfs/Snapper automation for system resilience.
