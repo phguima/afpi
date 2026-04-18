@@ -17,6 +17,16 @@
     - { role: apps, tags: [apps, software] }
     - { role: ai_tools, tags: [ai, gemini] }
 
+  post_tasks:
+    - name: AFPI | Final Status
+      ansible.builtin.debug:
+        msg: 
+          - "==========================================================="
+          - "  AFPI DEPLOYMENT COMPLETED SUCCESSFULLY!                  "
+          - "  Your Fedora workstation is now optimized and ready.      "
+          - "==========================================================="
+      tags: [always]
+
   handlers:
     - name: Regenerate GRUB
       ansible.builtin.command: grub2-mkconfig -o /etc/grub2-efi.cfg
