@@ -18,15 +18,14 @@
 
 # --- Download Phase ---
 - name: KDE Extensions | Download Extensions from KDE Store
-  ansible.builtin.get_url:
-    url: "{{ item.url }}"
-    dest: "/tmp/afpi_extensions/{{ item.name }}.tar.gz"
-    mode: '0644'
+  ansible.builtin.shell: |
+    curl -L -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+    -o "/tmp/afpi_extensions/{{ item.name }}.tar.gz" "{{ item.url }}"
   loop:
     - { name: 'modern_clock', url: 'https://store.kde.org/dl/2344806' }
     - { name: 'panel_colorizer', url: 'https://store.kde.org/dl/2130967' }
     - { name: 'kzones', url: 'https://store.kde.org/dl/1909220' }
-  register: download_results
+  changed_when: true
   tags: [kde, extensions, download]
 
 # --- Installation Phase ---
