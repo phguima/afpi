@@ -123,6 +123,11 @@
   ansible.builtin.dnf:
     name: "proton-vpn-gnome-desktop"
     state: present
+    update_cache: yes
+  register: proton_install
+  until: proton_install is success
+  retries: 3
+  delay: 10
   tags: [software, protonvpn]
 
 
