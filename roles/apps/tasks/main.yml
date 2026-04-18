@@ -22,6 +22,26 @@
     state: present
   tags: [software, dnf, common]
 
+# --- VirtualBox Configuration ---
+- name: VirtualBox | Ensure vboxusers and vboxsf groups exist
+  ansible.builtin.group:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - vboxusers
+    - vboxsf
+  tags: [software, virtualbox]
+
+- name: VirtualBox | Add user to vboxusers and vboxsf groups
+  ansible.builtin.user:
+    name: "{{ user_name }}"
+    groups: 
+      - vboxusers
+      - vboxsf
+    append: yes
+  when: user_name != 'root'
+  tags: [software, virtualbox]
+
 # --- Flatpak Applications ---
 - name: System | Enable Flathub Repository
   community.general.flatpak_remote:

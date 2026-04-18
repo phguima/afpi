@@ -12,7 +12,7 @@ The project is organized to isolate responsibilities, ensuring idempotency and e
     *   **Universal Cedilla (ç) Fix**: Fine-tuned in three layers (System, Flatpak, and Ozone/X11) to ensure the cedilla works perfectly across all applications.
     *   **Visual**: Unified management of wallpapers (Desktop/SDDM), profile pictures, and terminal profiles (Konsole/PTYxis).
 
-*   **`apps`**: Complete suite via DNF and Flatpak, featuring GPU automation for Steam and productivity tools (Brave, VS Code).
+*   **`apps`**: Complete suite via DNF and Flatpak, featuring GPU automation for Steam, **VirtualBox group management (vboxusers/vboxsf)**, and productivity tools (Brave, VS Code).
 *   **`ai_tools`**: Integration of the AI ecosystem (Gemini CLI and extensions) and specialized Python libraries via `pipx`.
 
 ## 🔐 Secrets Management (Ansible Vault)
