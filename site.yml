@@ -22,10 +22,10 @@
       ansible.builtin.command: grub2-mkconfig -o /etc/grub2-efi.cfg
 
     - name: Restart Plasmashell
-      ansible.builtin.shell: |
-        kquitapp6 plasmashell || killall plasmashell
-        sleep 2
-        kstart6 plasmashell
+      ansible.builtin.systemd:
+        name: plasma-plasmashell.service
+        state: restarted
+        scope: user
       become_user: "{{ user_name }}"
       ignore_errors: yes
       when: is_kde
