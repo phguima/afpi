@@ -39,6 +39,15 @@
   notify: Restart Plasmashell
   tags: [kde, layout]
 
+- name: Plasma Layout | Force Wallpaper Application
+  ansible.builtin.shell: |
+    export $(dbus-launch)
+    plasma-apply-wallpaperimage /usr/share/backgrounds/afpi/{{ system_wallpaper }}
+  become_user: "{{ user_name }}"
+  ignore_errors: yes
+  when: is_kde and user_name != 'root'
+  tags: [kde, layout, visual]
+
 # --- Garantir que Plasmashell reinicie se necessário ---
 # Note: Reiniciar o shell via Ansible pode fechar a sessão se não for feito com cuidado.
 # O handler 'Restart Plasmashell' deve ser definido no site.yml ou na role.

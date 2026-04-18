@@ -72,6 +72,9 @@ dnf_packages_gnome:
 
 dnf_packages_kde:
   - ktorrent
+  - plasma-sdk
+  - kde-gtk-config
+
 
 # Flatpak Apps
 flatpak_apps_common:
