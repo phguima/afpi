@@ -1,41 +1,44 @@
-# AFPI Project Session Report - April 17, 2026 (Final Refinement)
+# AFPI Project Session Report - April 17, 2026 (Final Hardware & UI Hardening)
 
 ## 🎯 Objective
-Validate the real-world deployment in a VM, fixing communication failures with the graphical session (D-Bus), Plasma 6 compatibility, and DNF resilience.
+Finalize the real-world deployment on Fedora 43 / Plasma 6, ensuring that custom widgets and layout are applied correctly even when native installers fail.
 
-## 🏗️ Technical Evolution
+## 🏗️ Technical Breakthroughs
 
-### 📂 Core Optimization
-- **`ansible.cfg`**: Added configuration file with `pipelining = True` and `become_ask_pass = True`, accelerating deployment and eliminating the manual `-K` flag.
-- **Git Sync:** Local repository successfully linked to GitHub ([phguima/afpi](https://github.com/phguima/afpi)).
+### 📂 KDE Extensions "God-Mode" Installation
+- **Problem:** `kpackagetool6` was failing due to complex redirects and metadata errors from the KDE Store.
+- **Solution:** Replaced native installation with **Robust Manual Extraction**.
+- **Impact:** Widgets (Modern Clock, Panel Colorizer) and scripts (KZones) are now manually extracted into the exact directory names required by the `.appletsrc` layout. This bypasses store redirection bugs while maintaining full compatibility with **KDE Discover** for future updates.
 
-## 🚀 Technical Victories and Fixes (VM Test Phase)
+### 📂 UI Session Integration
+- **D-Bus Session Access:** Refined all GUI-related tasks to use the correct user session bus (`/run/user/UID/bus`).
+- **Systemd Handler:** Replaced the legacy `kstart6` shell command with a modern `systemctl --user restart plasma-plasmashell` handler, ensuring stable desktop restarts after layout changes.
 
-### 1. Plasma 6 Compatibility (Fedora 43+)
-- **KDE Extensions:** Fixed invalid metadata errors by updating package types to `Plasma/Applet` and `KWin/Script`.
-- **D-Bus Bridge:** Implemented session bus injection (`export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus`) in all tasks interacting with the GUI, allowing Ansible to change wallpapers and install widgets correctly.
-- **KNS Robustness:** Returned to the native `kpackagetool6` method after failures with direct downloads from the KDE Store, ensuring KDE manages store redirections itself.
+## 🚀 Final Fixes Applied
 
-### 2. System Stability (DNF & Kernel)
-- **Kernel Protection:** Adjusted the cleanup task to explicitly ignore the running kernel (`uname -r`), preventing DNF from aborting for security reasons.
-- **DNF5 Syntax:** Fixed `config-manager` syntax for disabling debug repositories, ensuring compatibility with the latest Fedora versions.
+### 1. Robustness & Privacy
+- **Path Consistency:** Fixed wallpaper paths to ensure the "Force Application" task and the Layout template use the same system-wide path (`/usr/share/backgrounds/afpi/`).
+- **Shortcuts Refactoring:** Centralized the creation of `~/.local/share/applications/` to prevent copy failures for Steam and Browsers.
+- **English Documentation:** Fully translated `README.md` and `SESSION_REPORT.md` for international standards.
 
-### 3. Deployment Logic
-- **Execution Order:** Moved browser cedilla fixes (Brave/Chromium) from the `desktop` role to the `apps` role, ensuring configuration only occurs **after** the browsers are physically installed.
-- **Hardware Detection:** Evolved the disk detection command to `findmnt -no UUID /`, making it immune to complex path issues in Btrfs subvolumes.
+### 2. DNF & Core
+- **ProtonVPN Fix:** Implemented explicit cache cleaning (`dnf clean metadata`) before installation to ensure the third-party repo is properly read by DNF.
 
 ---
 
 ## 🔄 How to Resume the Next Session
 To continue, provide the following prompt:
-> **"Nexus, let's resume AFPI. The system is hardened and tested in a VM. Any new apps or tweaks for the main setup?"**
+> **"Nexus, AFPI is fully hardened and tested. Desktop layout and widgets are 100% automated. What's the next optimization for our toolset?"**
 
 ### Current State:
-- [x] Git repository clean and synchronized (no temporary files).
-- [x] KDE widget installation functional via D-Bus.
-- [x] Wallpaper application forced and persistent.
-- [x] Robust kernel protection and hardware detection.
+- [x] KDE Widgets installed via manual extraction (Discover-compatible).
+- [x] Plasma 6 Systemd handlers implemented.
+- [x] English documentation updated and attribution-free.
+- [x] Git repository synchronized and clean.
 
-### Next Recommended Steps:
-1.  **Deploy on Real Machine:** Now that the VM test passed, the project is ready for the primary workstation.
-2.  **RAM Monitoring:** Add notes to the README about required RAM for installing heavy packages like Android Studio (OOM rc-9 error).
+### Final Verification Command:
+```bash
+ansible-playbook site.yml --ask-vault-pass
+```
+
+---
