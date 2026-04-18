@@ -1,5 +1,5 @@
 ---
-# KDE Store Extensions (KNS) Installation - Robust Method
+# KDE Store Extensions (KNS) Installation
 
 # --- Directory Setup ---
 - name: KDE Extensions | Ensure local directories exist
@@ -12,40 +12,36 @@
   loop:
     - "{{ user_home }}/.local/share/plasma/plasmoids"
     - "{{ user_home }}/.local/share/kwin/scripts"
-    - "/tmp/afpi_extensions"
   when: user_name != 'root'
   tags: [kde, extensions, setup]
 
-# --- Download Phase ---
-- name: KDE Extensions | Download Extensions from KDE Store
+# --- Installation Phase via KPackageTool ---
+- name: KDE Extensions | Install Plasma Widgets (Plasmoids)
   ansible.builtin.shell: |
-    curl -L -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-    -o "/tmp/afpi_extensions/{{ item.name }}.tar.gz" "{{ item.url }}"
-  loop:
-    - { name: 'modern_clock', url: 'https://store.kde.org/dl/2344806' }
-    - { name: 'panel_colorizer', url: 'https://store.kde.org/dl/2130967' }
-    - { name: 'kzones', url: 'https://store.kde.org/dl/1909220' }
-  changed_when: true
-  tags: [kde, extensions, download]
-
-# --- Installation Phase ---
-- name: KDE Extensions | Install/Upgrade Plasmoids
-  ansible.builtin.shell: |
-    kpackagetool6 --type=Plasma/Applet --install /tmp/afpi_extensions/{{ item.name }}.tar.gz || \
-    kpackagetool6 --type=Plasma/Applet --upgrade /tmp/afpi_extensions/{{ item.name }}.tar.gz
+    export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+    kpackagetool6 --type=Plasma/Applet --install {{ item.url }} || \
+    kpackagetool6 --type=Plasma/Applet --upgrade {{ item.url }}
   become_user: "{{ user_name }}"
+  register: plasmoid_install
+  failed_when: false
+  changed_when: "'Successfully installed' in plasmoid_install.stdout or 'Successfully upgraded' in plasmoid_install.stdout"
   loop:
-    - { name: 'modern_clock' }
-    - { name: 'panel_colorizer' }
-  ignore_errors: yes
+    - { name: 'Advanced Modern Clock', url: 'https://store.kde.org/dl/2344806' }
+    - { name: 'Panel Colorizer', url: 'https://store.kde.org/dl/2130967' }
+  when: is_kde and user_name != 'root'
   tags: [kde, extensions, widgets]
 
-- name: KDE Extensions | Install/Upgrade KZones (KWin Script)
+# --- KWin Scripts ---
+- name: KDE Extensions | Install KZones (KWin Script)
   ansible.builtin.shell: |
-    kpackagetool6 --type=KWin/Script --install /tmp/afpi_extensions/kzones.tar.gz || \
-    kpackagetool6 --type=KWin/Script --upgrade /tmp/afpi_extensions/kzones.tar.gz
+    export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+    kpackagetool6 --type=KWin/Script --install https://store.kde.org/dl/1909220 || \
+    kpackagetool6 --type=KWin/Script --upgrade https://store.kde.org/dl/1909220
   become_user: "{{ user_name }}"
-  ignore_errors: yes
+  register: kwinscript_install
+  failed_when: false
+  changed_when: "'Successfully installed' in kwinscript_install.stdout or 'Successfully upgraded' in kwinscript_install.stdout"
+  when: is_kde and user_name != 'root'
   tags: [kde, extensions, kwin]
 
 # --- KZones Configuration ---
@@ -60,10 +56,3 @@
   become_user: "{{ user_name }}"
   when: is_kde and user_name != 'root'
   tags: [kde, extensions, kwin, layouts]
-
-# --- Cleanup ---
-- name: KDE Extensions | Remove temporary download directory
-  ansible.builtin.file:
-    path: "/tmp/afpi_extensions"
-    state: absent
-  tags: [kde, extensions, cleanup]
