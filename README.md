@@ -72,5 +72,3 @@ A configuração do ZSH foi simplificada. O tema `kali-like-alt` gerencia suas p
 ### Correção Universal de Cedilha (ç)
 Ajuste fino em três camadas (Sistema, Flatpak e Ozone/X11) para garantir que a cedilha funcione perfeitamente em todos os aplicativos, inclusive navegadores e ferramentas de comunicação.
 
----
-*Desenvolvido e mantido com o auxílio de **Nexus (Universal Software Engineer)**.*
