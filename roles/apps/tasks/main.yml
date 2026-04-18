@@ -99,16 +99,15 @@
   tags: [software, protonvpn]
 
 - name: ProtonVPN | Refresh DNF cache
-  ansible.builtin.dnf:
-    update_cache: yes
+  ansible.builtin.shell: dnf clean metadata && dnf makecache
   changed_when: false
   tags: [software, protonvpn]
 
 - name: ProtonVPN | Install ProtonVPN
   ansible.builtin.dnf:
-    name: 
-      - proton-vpn-gnome-desktop
+    name: "proton-vpn-gnome-desktop"
     state: present
+    update_cache: yes
   register: proton_install
   ignore_errors: "{{ ansible_check_mode }}"
   tags: [software, protonvpn]
