@@ -106,7 +106,7 @@
 - name: ProtonVPN | Import GPG Key
   ansible.builtin.rpm_key:
     state: present
-    key: https://repo.protonvpn.com/fedora/fedora-{{ ansible_distribution_major_version }}-stable/public_key.asc
+    key: https://repo.protonvpn.com/fedora-{{ ansible_distribution_major_version }}-stable/public_key.asc
   tags: [software, protonvpn]
 
 - name: ProtonVPN | Install ProtonVPN

@@ -1,6 +1,6 @@
 # AFPI (Advanced Fedora Post-Install) - Ansible Role-Based
 
-AFPI is a modular and intelligent system for Fedora Workstation post-installation. It uses an architecture based on **Roles** and **Dynamic Templates**, allowing your desktop customization and hardware optimizations to be applied consistently, making your workstation deployment fully automated and "hardware-aware".
+AFPI is a modular and intelligent system for Fedora Workstation post-installation (Validated on Fedora 41-43). It uses an architecture based on **Roles** and **Dynamic Templates**, allowing your desktop customization and hardware optimizations to be applied consistently, making your workstation deployment fully automated and "hardware-aware".
 
 ## 🏗️ Architecture and Roles
 
