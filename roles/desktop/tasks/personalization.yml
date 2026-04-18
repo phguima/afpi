@@ -45,18 +45,17 @@
     - user_profile_picture is defined
   tags: [personalization, profile]
 
-# --- SDDM Wallpaper ---
-# Most SDDM themes (like Breeze) look into /etc/sddm.conf.d/
-- name: Personalize | Configure SDDM background
-  community.general.ini_file:
-    path: /etc/sddm.conf.d/kde_settings.conf
-    section: Theme
-    option: Background
-    value: "/usr/share/backgrounds/afpi/{{ system_wallpaper }}"
-    owner: root
-    mode: '0644'
-  when: is_kde
-  tags: [personalization, wallpaper, sddm]
+# --- Plasma Desktop Wallpaper ---
+- name: Personalize | Force Plasma Wallpaper Application
+  ansible.builtin.shell: |
+    export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+    plasma-apply-wallpaperimage /usr/share/backgrounds/afpi/{{ system_wallpaper }}
+  become_user: "{{ user_name }}"
+  ignore_errors: yes
+  when: is_kde and user_name != 'root' and not ansible_check_mode
+  tags: [personalization, wallpaper, visual]
+
+
 
 # --- User Profile Picture (AccountsService) ---
 - name: Personalize | Ensure AccountsService user directory exists
