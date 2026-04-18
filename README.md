@@ -55,6 +55,17 @@ Apply the full configuration (the provided `ansible.cfg` is optimized for faster
 ansible-playbook site.yml --ask-vault-pass
 ```
 
+> [!IMPORTANT]
+> **Usuários NVIDIA:** Para garantir a compatibilidade dos drivers proprietários com o kernel mais recente, é altamente recomendado seguir este fluxo:
+> 1. Execute apenas a atualização do sistema: `ansible-playbook site.yml --tags common --ask-vault-pass`
+> 2. **Reinicie** a máquina para carregar o novo kernel.
+> 3. Execute o playbook completo (ou pule a role common se desejar): `ansible-playbook site.yml --ask-vault-pass`
+>
+> **Dica de Controle (Tags):**
+> - Para pular a atualização do sistema se já a fez: `--skip-tags common`
+> - Para pular a instalação dos drivers NVIDIA: `--skip-tags nvidia`
+
+
 ## 🛠️ AFPI Differentiators
 
 ### Zero-Config Shell
