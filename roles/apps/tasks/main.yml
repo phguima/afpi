@@ -24,10 +24,10 @@
 
 # --- Flatpak Applications ---
 - name: System | Enable Flathub Repository
-  community.general.flatpak_remote:
-    name: flathub
-    state: present
-    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+  ansible.builtin.shell: |
+    flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  register: flathub_result
+  changed_when: "'is already' not in flathub_result.stderr"
   tags: [system, flatpak]
 
 - name: Software | Install KDE specific flatpak applications
