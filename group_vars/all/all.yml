@@ -80,8 +80,6 @@ dnf_packages_kde:
 flatpak_apps_common:
   - com.bitwarden.desktop
   - com.dec05eba.gpu_screen_recorder
-  - com.google.AndroidStudio
-  - com.jetbrains.IntelliJ-IDEA-Ultimate
   - com.slack.Slack
   - com.spotify.Client
   - net.displaycal.DisplayCAL
