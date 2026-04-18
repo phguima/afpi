@@ -81,6 +81,10 @@ ansible-playbook site.yml --ask-vault-pass
 ### Zero-Config Shell
 ZSH configuration has been simplified. The `kali-like-alt` theme manages its own dependencies (syntax highlighting and autosuggestions), reducing playbook complexity and execution time.
 
+### Automated Resilience
+The system handles common installation failures automatically, such as external repository synchronization (ProtonVPN) and hardware-specific configurations.
+
 ### Universal Cedilla (ç) Fix
 Fine-tuned in three layers (System, Flatpak, and Ozone/X11) to ensure the cedilla works perfectly across all applications, including browsers and communication tools.
+
 
