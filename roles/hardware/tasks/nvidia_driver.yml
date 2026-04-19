@@ -87,15 +87,22 @@
       changed_when: false
       when: mok_key_file_after.stat.exists
 
+    - name: NVIDIA | Check if MOK enrollment is already pending
+      ansible.builtin.shell: mokutil --list-new | grep -q "$(mokutil --fingerprint /etc/pki/akmods/certs/public_key.der | cut -d' ' -f2)"
+      register: mok_pending
+      failed_when: false
+      changed_when: false
+      when: is_secure_boot and mok_key_file_after.stat.exists
+
     - name: NVIDIA | Import MOK key (Secure Boot)
       ansible.builtin.shell: |
-        # Usamos um pipe mais robusto para a senha
-        (echo "{{ mok_password | default('fedora-afpi') }}"; sleep 1; echo "{{ mok_password | default('fedora-afpi') }}") | mokutil --import /etc/pki/akmods/certs/public_key.der
+        printf '{{ mok_password | default("fedora-afpi") }}\n{{ mok_password | default("fedora-afpi") }}\n' | mokutil --import /etc/pki/akmods/certs/public_key.der
       register: import_result
       when: 
         - is_secure_boot
         - mok_key_file_after.stat.exists
-        - (mok_test.rc is defined and mok_test.rc != 0)
+        - mok_test.rc != 0
+        - mok_pending.rc != 0
       no_log: false
 
     - name: NVIDIA | Install NVIDIA drivers and related packages
@@ -122,20 +129,30 @@
       poll: 10
       changed_when: false
 
-    - name: NVIDIA | Force akmods and dracut
+    - name: NVIDIA | Force akmods to rebuild and sign modules
       ansible.builtin.shell: |
-        akmods --force
-        dracut --force
+        akmods --force --kernel $(uname -r) --akmod nvidia
+      register: akmods_force_result
       changed_when: true
+      failed_when: false
+
+    - name: NVIDIA | Update initramfs (dracut)
+      ansible.builtin.shell: dracut --force
+      when: akmods_force_result.rc == 0
+      changed_when: true
+
+    - name: NVIDIA | Verify module signature again
+      ansible.builtin.shell: modinfo -F signer nvidia || echo "NOT_SIGNED"
+      register: final_sign_check
+      changed_when: false
 
     - name: NVIDIA | Recommend Reboot
       ansible.builtin.debug:
         msg: 
           - "==========================================================="
-          - "NVIDIA installation complete."
-          - "A system REBOOT is REQUIRED to enroll the MOK key."
-          - "Secure Boot: {{ 'ENABLED' if is_secure_boot else 'DISABLED' }}"
-          - "MOK Password: {{ mok_password | default('fedora-afpi') }}"
+          - "NVIDIA status: {{ final_sign_check.stdout }}"
+          - "A system REBOOT is REQUIRED to enroll the MOK key if not done yet."
+          - "If signer is NOT 'argus' (or your hostname), check /var/cache/akmods/nvidia/"
           - "==========================================================="
 
   when: 
