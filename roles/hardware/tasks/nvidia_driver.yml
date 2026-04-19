@@ -88,22 +88,35 @@
       when: mok_key_file_after.stat.exists
 
     - name: NVIDIA | Check if MOK enrollment is already pending
-      ansible.builtin.shell: mokutil --list-new | grep -q "$(mokutil --fingerprint /etc/pki/akmods/certs/public_key.der | cut -d' ' -f2)"
+      ansible.builtin.shell: |
+        MOK_FINGERPRINT=$(openssl x509 -in /etc/pki/akmods/certs/public_key.der -inform DER -noout -fingerprint -sha1 | cut -d= -f2 | tr -d ':')
+        mokutil --list-new | tr -d ':' | grep -qi "$MOK_FINGERPRINT"
       register: mok_pending
       failed_when: false
       changed_when: false
       when: is_secure_boot and mok_key_file_after.stat.exists
 
+    - name: NVIDIA | Set MOK Timeout
+      ansible.builtin.shell: mokutil --set-timeout 10
+      when: is_secure_boot
+      failed_when: false
+      changed_when: false
+
     - name: NVIDIA | Import MOK key (Secure Boot)
       ansible.builtin.shell: |
-        printf '{{ mok_password | default("fedora-afpi") }}\n{{ mok_password | default("fedora-afpi") }}\n' | mokutil --import /etc/pki/akmods/certs/public_key.der
+        (echo '{{ mok_password | default("fedora-afpi") }}'; sleep 1; echo '{{ mok_password | default("fedora-afpi") }}') | mokutil --import /etc/pki/akmods/certs/public_key.der
       register: import_result
       when: 
         - is_secure_boot
         - mok_key_file_after.stat.exists
         - mok_test.rc != 0
         - mok_pending.rc != 0
-      no_log: false
+      no_log: true
+
+    - name: NVIDIA | Confirm MOK Scheduling
+      ansible.builtin.debug:
+        msg: "MOK import command executed successfully. THE MOK SCREEN WILL APPEAR ON THE NEXT REBOOT."
+      when: import_result is changed and import_result.rc == 0
 
     - name: NVIDIA | Install NVIDIA drivers and related packages
       ansible.builtin.dnf:
