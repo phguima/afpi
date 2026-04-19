@@ -28,11 +28,6 @@
         prompt: |
           >>> IMPORTANT <<<
           Installing nVidia drivers requires some manual procedures.
-          Some packages will be installed and a key for secure boot will be created
-          to be enrolled in the system on the next reboot.
-          
-          A password must be created now for the MOK enrollment.
-          This password will be requested the next time the system is started.
           
           Secure Boot detected as: {{ sb_state.stdout | default('Unknown') }}
           Logic is_secure_boot: {{ is_secure_boot }}
@@ -55,30 +50,43 @@
         name: [akmods, kmodtool, openssl, mokutil]
         state: present
 
+    - name: NVIDIA | Ensure MOK directory exists
+      ansible.builtin.file:
+        path: /etc/pki/akmods/certs
+        state: directory
+        mode: '0755'
+
     - name: NVIDIA | Generate MOK key
       ansible.builtin.command: kmodgenca -a
       args:
         creates: /etc/pki/akmods/certs/public_key.der
+
+    - name: NVIDIA | Check if MOK key exists (stat)
+      ansible.builtin.stat:
+        path: /etc/pki/akmods/certs/public_key.der
+      register: mok_key_file
 
     - name: NVIDIA | Check if MOK key needs enrollment
       ansible.builtin.command: mokutil --test-key /etc/pki/akmods/certs/public_key.der
       register: mok_test
       failed_when: false
       changed_when: false
+      when: mok_key_file.stat.exists
 
     - name: NVIDIA | Debug Enrollment Status
       ansible.builtin.debug:
         msg: 
           - "Is Secure Boot: {{ is_secure_boot }}"
-          - "MOK Test Return Code: {{ mok_test.rc }} (0 means already enrolled, !=0 means needs enrollment)"
-          - "MOK Key path exists: {{ query('file', '/etc/pki/akmods/certs/public_key.der') | length > 0 | default(false) }}"
+          - "MOK Key File Exists: {{ mok_key_file.stat.exists }}"
+          - "MOK Test Return Code: {{ mok_test.rc | default('N/A') }}"
 
     - name: NVIDIA | Import MOK key (Secure Boot)
       ansible.builtin.shell: |
         echo -e "{{ mok_password | default('fedora-afpi') }}\n{{ mok_password | default('fedora-afpi') }}" | mokutil --import /etc/pki/akmods/certs/public_key.der
       when: 
         - is_secure_boot
-        - mok_test.rc != 0
+        - mok_key_file.stat.exists
+        - mok_test.rc is defined and mok_test.rc != 0
       no_log: false
 
     - name: NVIDIA | Install NVIDIA drivers and related packages
