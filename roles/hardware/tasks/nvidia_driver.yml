@@ -13,6 +13,16 @@
 
 - name: NVIDIA | Driver Installation Block
   block:
+    - name: NVIDIA | Detect Secure Boot status
+      ansible.builtin.command: mokutil --sb-state
+      register: sb_state
+      changed_when: false
+      failed_when: false
+
+    - name: NVIDIA | Set Secure Boot fact
+      set_fact:
+        is_secure_boot: "{{ 'enabled' in sb_state.stdout }}"
+
     - name: NVIDIA | Show Installation Warning
       ansible.builtin.pause:
         prompt: |
@@ -24,6 +34,12 @@
           A password must be created now for the MOK enrollment.
           This password will be requested the next time the system is started.
           
+          Secure Boot is currently: {{ 'ENABLED' if is_secure_boot else 'DISABLED' }}
+          {% if not is_secure_boot %}
+          NOTE: Since Secure Boot is DISABLED, MOK enrollment is optional but 
+          the key will still be generated for consistency.
+          {% endif %}
+
           Press [Enter] to continue or Ctrl+C to abort...
 
     - name: NVIDIA | Ensure RPM Fusion Non-Free is enabled
@@ -55,9 +71,12 @@
 
     - name: NVIDIA | Import MOK key (Secure Boot)
       ansible.builtin.shell: |
-        echo -e "{{ mok_password | default('fedora') }}\n{{ mok_password | default('fedora') }}" | mokutil --import /etc/pki/akmods/certs/public_key.der
-      when: mok_test.rc != 0
-      no_log: true 
+        # Senha padrão alterada para 'fedora-afpi' para cumprir o requisito de >= 8 caracteres
+        echo -e "{{ mok_password | default('fedora-afpi') }}\n{{ mok_password | default('fedora-afpi') }}" | mokutil --import /etc/pki/akmods/certs/public_key.der
+      when: 
+        - is_secure_boot
+        - mok_test.rc != 0
+      no_log: false # Desativado temporariamente para debugar falhas de importação se necessário
 
     - name: NVIDIA | Install NVIDIA drivers and related packages
       ansible.builtin.dnf:
@@ -99,7 +118,8 @@
         msg: 
           - "NVIDIA installation complete."
           - "A system REBOOT is REQUIRED to enroll the MOK key and load the drivers."
-          - "MOK Password used: {{ mok_password | default('fedora') }}"
+          - "MOK Password used: {{ mok_password | default('fedora-afpi') }}"
+          - "Secure Boot Status: {{ 'ENABLED' if is_secure_boot else 'DISABLED' }}"
 
   when: 
     - is_nvidia_present
