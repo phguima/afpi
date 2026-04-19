@@ -6,9 +6,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.2.1
+*   **Current Version:** 2.2.2
 *   **Last Update:** April 19, 2026
-*   **Latest Improvement:** Commented out automated NVIDIA driver installation to allow for more granular system preparation and manual control during the post-install process.
+*   **Latest Improvement:** Decoupled NVIDIA driver installation into a standalone script (`nvidia.sh`) for better reliability and manual execution, while maintaining the Ansible roles for configuration and multimedia support.
 *   **Stability:** Production-ready for Fedora 41, 42, and 43.
 
 ## 🏗️ Architecture and Roles
@@ -67,7 +67,14 @@ Prepare the Ansible environment:
 ./bootstrap.sh
 ```
 
-### 2. Run the Playbook
+### 2. Install NVIDIA Drivers (Optional)
+If you have an NVIDIA GPU and want proprietary drivers with Secure Boot support, run the standalone script:
+```bash
+sudo ./nvidia.sh
+```
+Follow the on-screen instructions for MOK enrollment.
+
+### 3. Run the Playbook
 Apply the full configuration (the provided `ansible.cfg` is optimized for faster deployment):
 ```bash
 ansible-playbook site.yml --ask-vault-pass
@@ -77,7 +84,9 @@ ansible-playbook site.yml --ask-vault-pass
 > **NVIDIA Users:** To ensure compatibility of proprietary drivers with the latest kernel, it is highly recommended to follow this workflow:
 > 1. Run the system update role only: `ansible-playbook site.yml --tags common --ask-vault-pass`
 > 2. **Reboot** your machine to load the new kernel.
-> 3. Run the full playbook (or skip common if already updated): `ansible-playbook site.yml --ask-vault-pass`
+> 3. Run the standalone script: `sudo ./nvidia.sh`
+> 4. **Reboot** to enroll MOK (if Secure Boot enabled).
+> 5. Run the full playbook (or skip common if already updated): `ansible-playbook site.yml --ask-vault-pass`
 >
 > **Control Tips (Tags):**
 > - To skip system update if already done: `--skip-tags common`
@@ -94,12 +103,10 @@ ZSH configuration has been simplified. The `kali-like-alt` theme manages its own
 The system handles common installation failures automatically, such as external repository synchronization (ProtonVPN) and hardware-specific configurations. It implements a **Double-Guard** logic (repository validation + intelligent retries) to mitigate mirror instabilities during deployment.
 
 ### Robust NVIDIA & Secure Boot Automation
-The NVIDIA role now features an advanced MOK (Machine Owner Key) management system:
+The standalone `nvidia.sh` script features an advanced MOK (Machine Owner Key) management system:
 *   **Intelligent Detection:** Detects existing keys, pending enrollments, and kernel status to avoid redundant operations.
 *   **Forced Signing:** Automatically triggers `akmods` and `dracut` to ensure modules are signed and included in the initramfs immediately.
 *   **Secure Pipe:** Uses high-reliability password injection for `mokutil` to ensure smooth enrollment during the first reboot.
 
 ### Universal Cedilla (ç) Fix
 Fine-tuned in three layers (System, Flatpak, and Ozone/X11) to ensure the cedilla works perfectly across all applications, including browsers and communication tools.
-
-
