@@ -1,6 +1,15 @@
 # AFPI (Advanced Fedora Post-Install) - Ansible Role-Based
 
+[![Project Status: Active](https://img.shields.io/badge/Project%20Status-Active-brightgreen.svg)](#-project-status)
+
 AFPI is a modular and intelligent system for Fedora Workstation post-installation (Validated on Fedora 41-43). It uses an architecture based on **Roles** and **Dynamic Templates**, allowing your desktop customization and hardware optimizations to be applied consistently, making your workstation deployment fully automated and "hardware-aware".
+
+## 📊 Project Status
+
+*   **Current Version:** 2.1.0
+*   **Last Update:** April 2026
+*   **Latest Improvement:** Enhanced NVIDIA Secure Boot automation with robust MOK enrollment logic and forced kernel module signing for guaranteed driver loading.
+*   **Stability:** Production-ready for Fedora 41, 42, and 43.
 
 ## 🏗️ Architecture and Roles
 
@@ -83,6 +92,12 @@ ZSH configuration has been simplified. The `kali-like-alt` theme manages its own
 
 ### Automated Resilience
 The system handles common installation failures automatically, such as external repository synchronization (ProtonVPN) and hardware-specific configurations. It implements a **Double-Guard** logic (repository validation + intelligent retries) to mitigate mirror instabilities during deployment.
+
+### Robust NVIDIA & Secure Boot Automation
+The NVIDIA role now features an advanced MOK (Machine Owner Key) management system:
+*   **Intelligent Detection:** Detects existing keys, pending enrollments, and kernel status to avoid redundant operations.
+*   **Forced Signing:** Automatically triggers `akmods` and `dracut` to ensure modules are signed and included in the initramfs immediately.
+*   **Secure Pipe:** Uses high-reliability password injection for `mokutil` to ensure smooth enrollment during the first reboot.
 
 ### Universal Cedilla (ç) Fix
 Fine-tuned in three layers (System, Flatpak, and Ozone/X11) to ensure the cedilla works perfectly across all applications, including browsers and communication tools.
