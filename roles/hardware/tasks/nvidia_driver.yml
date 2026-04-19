@@ -21,7 +21,7 @@
 
     - name: NVIDIA | Set Secure Boot fact
       set_fact:
-        is_secure_boot: "{{ 'enabled' in sb_state.stdout }}"
+        is_secure_boot: "{{ 'enabled' in sb_state.stdout | lower }}"
 
     - name: NVIDIA | Show Installation Warning
       ansible.builtin.pause:
@@ -34,11 +34,8 @@
           A password must be created now for the MOK enrollment.
           This password will be requested the next time the system is started.
           
-          Secure Boot is currently: {{ 'ENABLED' if is_secure_boot else 'DISABLED' }}
-          {% if not is_secure_boot %}
-          NOTE: Since Secure Boot is DISABLED, MOK enrollment is optional but 
-          the key will still be generated for consistency.
-          {% endif %}
+          Secure Boot detected as: {{ sb_state.stdout | default('Unknown') }}
+          Logic is_secure_boot: {{ is_secure_boot }}
 
           Press [Enter] to continue or Ctrl+C to abort...
 
@@ -69,14 +66,20 @@
       failed_when: false
       changed_when: false
 
+    - name: NVIDIA | Debug Enrollment Status
+      ansible.builtin.debug:
+        msg: 
+          - "Is Secure Boot: {{ is_secure_boot }}"
+          - "MOK Test Return Code: {{ mok_test.rc }} (0 means already enrolled, !=0 means needs enrollment)"
+          - "MOK Key path exists: {{ query('file', '/etc/pki/akmods/certs/public_key.der') | length > 0 | default(false) }}"
+
     - name: NVIDIA | Import MOK key (Secure Boot)
       ansible.builtin.shell: |
-        # Senha padrão alterada para 'fedora-afpi' para cumprir o requisito de >= 8 caracteres
         echo -e "{{ mok_password | default('fedora-afpi') }}\n{{ mok_password | default('fedora-afpi') }}" | mokutil --import /etc/pki/akmods/certs/public_key.der
       when: 
         - is_secure_boot
         - mok_test.rc != 0
-      no_log: false # Desativado temporariamente para debugar falhas de importação se necessário
+      no_log: false
 
     - name: NVIDIA | Install NVIDIA drivers and related packages
       ansible.builtin.dnf:
@@ -95,7 +98,6 @@
 
     - name: NVIDIA | Wait for kernel modules (akmods) to build
       ansible.builtin.shell: |
-        # Usamos -x para casar exatamente com o nome do processo e evitar auto-casamento com este script
         while pgrep -x "akmods" > /dev/null || pgrep -x "rpmbuild" > /dev/null; do
           sleep 5
         done
