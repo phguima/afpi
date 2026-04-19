@@ -2,9 +2,9 @@
 # Tasks for 'hardware' role
 
 # --- NVIDIA Driver Installation ---
-- name: Hardware | NVIDIA Proprietary Driver
-  ansible.builtin.import_tasks: nvidia_driver.yml
-  tags: [hardware, nvidia, driver]
+# - name: Hardware | NVIDIA Proprietary Driver
+#   ansible.builtin.import_tasks: nvidia_driver.yml
+#   tags: [hardware, nvidia, driver]
 
 # --- GPU Specific Hardware Acceleration ---      
 - name: Hardware | Install NVIDIA VA-API and NVENC/NVDEC support

@@ -6,9 +6,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.2.0
+*   **Current Version:** 2.2.1
 *   **Last Update:** April 19, 2026
-*   **Latest Improvement:** Fixed MOK enrollment detection using OpenSSL SHA1 fingerprints; enhanced import reliability with timed subshell pipes and mandatory 10s MOK menu timeout configuration.
+*   **Latest Improvement:** Commented out automated NVIDIA driver installation to allow for more granular system preparation and manual control during the post-install process.
 *   **Stability:** Production-ready for Fedora 41, 42, and 43.
 
 ## 🏗️ Architecture and Roles
