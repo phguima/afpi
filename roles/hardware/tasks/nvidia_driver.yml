@@ -23,17 +23,6 @@
       set_fact:
         is_secure_boot: "{{ 'enabled' in sb_state.stdout | lower }}"
 
-    - name: NVIDIA | Show Installation Warning
-      ansible.builtin.pause:
-        prompt: |
-          >>> IMPORTANT <<<
-          Installing nVidia drivers requires some manual procedures.
-          
-          Secure Boot detected as: {{ sb_state.stdout | default('Unknown') }}
-          Logic is_secure_boot: {{ is_secure_boot }}
-
-          Press [Enter] to continue or Ctrl+C to abort...
-
     - name: NVIDIA | Ensure RPM Fusion Non-Free is enabled
       ansible.builtin.dnf:
         name: 
@@ -41,52 +30,72 @@
         state: present
         disable_gpg_check: yes
 
-    - name: NVIDIA | Enable fedora-cisco-openh264 repository
-      ansible.builtin.command: dnf config-manager setopt fedora-cisco-openh264.enabled=1
-      changed_when: false
-
     - name: NVIDIA | Install prerequisites
       ansible.builtin.dnf:
         name: [akmods, kmodtool, openssl, mokutil]
         state: present
 
-    - name: NVIDIA | Ensure MOK directory exists
+    - name: NVIDIA | Ensure MOK directories exist
       ansible.builtin.file:
-        path: /etc/pki/akmods/certs
+        path: "{{ item }}"
         state: directory
-        mode: '0755'
+        mode: '0750'
+        owner: root
+        group: root
+      loop:
+        - /etc/pki/akmods
+        - /etc/pki/akmods/certs
+        - /etc/pki/akmods/private
 
-    - name: NVIDIA | Generate MOK key
-      ansible.builtin.command: kmodgenca -a
-      args:
-        creates: /etc/pki/akmods/certs/public_key.der
-
-    - name: NVIDIA | Check if MOK key exists (stat)
+    - name: NVIDIA | Check if MOK key exists
       ansible.builtin.stat:
         path: /etc/pki/akmods/certs/public_key.der
       register: mok_key_file
 
-    - name: NVIDIA | Check if MOK key needs enrollment
+    - name: NVIDIA | Generate MOK key (kmodgenca)
+      ansible.builtin.shell: kmodgenca -a
+      register: kmodgenca_result
+      when: not mok_key_file.stat.exists
+      failed_when: false
+
+    - name: NVIDIA | Debug Genca Output
+      ansible.builtin.debug:
+        var: kmodgenca_result
+      when: kmodgenca_result.changed
+
+    - name: NVIDIA | Verify key generation after command
+      ansible.builtin.stat:
+        path: /etc/pki/akmods/certs/public_key.der
+      register: mok_key_file_after
+
+    - name: NVIDIA | List MOK directory content for debug
+      ansible.builtin.shell: ls -R /etc/pki/akmods
+      register: mok_dir_ls
+      changed_when: false
+
+    - name: NVIDIA | Debug Enrollment Pre-requisites
+      ansible.builtin.debug:
+        msg: 
+          - "Secure Boot: {{ sb_state.stdout | trim }}"
+          - "Key exists: {{ mok_key_file_after.stat.exists }}"
+          - "Directory Structure: {{ mok_dir_ls.stdout }}"
+
+    - name: NVIDIA | Check if MOK key is already in kernel
       ansible.builtin.command: mokutil --test-key /etc/pki/akmods/certs/public_key.der
       register: mok_test
       failed_when: false
       changed_when: false
-      when: mok_key_file.stat.exists
-
-    - name: NVIDIA | Debug Enrollment Status
-      ansible.builtin.debug:
-        msg: 
-          - "Is Secure Boot: {{ is_secure_boot }}"
-          - "MOK Key File Exists: {{ mok_key_file.stat.exists }}"
-          - "MOK Test Return Code: {{ mok_test.rc | default('N/A') }}"
+      when: mok_key_file_after.stat.exists
 
     - name: NVIDIA | Import MOK key (Secure Boot)
       ansible.builtin.shell: |
-        echo -e "{{ mok_password | default('fedora-afpi') }}\n{{ mok_password | default('fedora-afpi') }}" | mokutil --import /etc/pki/akmods/certs/public_key.der
+        # Usamos um pipe mais robusto para a senha
+        (echo "{{ mok_password | default('fedora-afpi') }}"; sleep 1; echo "{{ mok_password | default('fedora-afpi') }}") | mokutil --import /etc/pki/akmods/certs/public_key.der
+      register: import_result
       when: 
         - is_secure_boot
-        - mok_key_file.stat.exists
-        - mok_test.rc is defined and mok_test.rc != 0
+        - mok_key_file_after.stat.exists
+        - (mok_test.rc is defined and mok_test.rc != 0)
       no_log: false
 
     - name: NVIDIA | Install NVIDIA drivers and related packages
@@ -119,17 +128,15 @@
         dracut --force
       changed_when: true
 
-    - name: NVIDIA | Mark akmod-nvidia as user installed
-      ansible.builtin.command: dnf mark user akmod-nvidia
-      changed_when: false
-
     - name: NVIDIA | Recommend Reboot
       ansible.builtin.debug:
         msg: 
+          - "==========================================================="
           - "NVIDIA installation complete."
-          - "A system REBOOT is REQUIRED to enroll the MOK key and load the drivers."
-          - "MOK Password used: {{ mok_password | default('fedora-afpi') }}"
-          - "Secure Boot Status: {{ 'ENABLED' if is_secure_boot else 'DISABLED' }}"
+          - "A system REBOOT is REQUIRED to enroll the MOK key."
+          - "Secure Boot: {{ 'ENABLED' if is_secure_boot else 'DISABLED' }}"
+          - "MOK Password: {{ mok_password | default('fedora-afpi') }}"
+          - "==========================================================="
 
   when: 
     - is_nvidia_present
