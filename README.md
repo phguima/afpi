@@ -6,9 +6,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.2.3
+*   **Current Version:** 2.3.0
 *   **Last Update:** April 20, 2026
-*   **Latest Improvement:** Refined NVIDIA installation workflow into a reliable 3-step process (Update -> Driver -> Full Config) ensuring kernel compatibility and Secure Boot stability.
+*   **Latest Improvement:** Overhauled tagging system across all roles for granular control and improved deployment flexibility.
 *   **Stability:** Production-ready for Fedora 41, 42, and 43.
 
 ## 🏗️ Architecture and Roles
@@ -23,6 +23,25 @@ The project is organized to isolate responsibilities, ensuring idempotency and e
 
 *   **`apps`**: Complete suite via DNF and Flatpak, featuring GPU automation for Steam, **VirtualBox group management (vboxusers/vboxsf)**, and productivity tools (Brave, VS Code).
 *   **`ai_tools`**: Integration of the AI ecosystem (Gemini CLI and extensions) and specialized Python libraries via `pipx`.
+
+## 🏷️ Granular Control (Tags)
+
+AFPI now features a comprehensive tagging system that allows you to run specific parts of the configuration:
+
+| Category | Primary Tags | Description |
+| :--- | :--- | :--- |
+| **Maintenance** | `update`, `cleanup` | System upgrades, DNF optimization, and kernel cleanup. |
+| **Hardware** | `nvidia`, `drivers`, `power`, `asus` | GPU drivers, power management, and ASUS-specific tools. |
+| **Shell** | `shell`, `zsh`, `omz`, `aliases` | ZSH installation, Oh-My-Zsh theme, and custom aliases. |
+| **Desktop** | `desktop`, `visual`, `fonts`, `cedilla` | UI themes, wallpapers, fonts, and the universal cedilla fix. |
+| **Software** | `apps`, `software`, `dnf`, `flatpak` | Application installation via DNF or Flatpak. |
+| **AI** | `ai`, `gemini`, `extensions`, `python` | Gemini CLI, extensions, and AI-related Python libraries. |
+
+### Usage Examples
+*   **Run only system updates:** `ansible-playbook site.yml --tags update --ask-vault-pass`
+*   **Apply only visual changes:** `ansible-playbook site.yml --tags visual --ask-vault-pass`
+*   **Fix cedilla across the system:** `ansible-playbook site.yml --tags cedilla --ask-vault-pass`
+*   **Skip NVIDIA and updates:** `ansible-playbook site.yml --skip-tags update,nvidia --ask-vault-pass`
 
 ## 🔐 Secrets Management (Ansible Vault)
 
@@ -87,10 +106,6 @@ ansible-playbook site.yml --ask-vault-pass
 > 3. **Install NVIDIA:** `ansible-playbook site.yml --tags nvidia --ask-vault-pass`
 > 4. **Reboot** to enroll the MOK key (if Secure Boot is enabled).
 > 5. **Finish Setup:** `ansible-playbook site.yml --skip-tags update,nvidia --ask-vault-pass`
->
-> **Control Tips (Tags):**
-> - To skip system update if already done: `--skip-tags update`
-> - To skip NVIDIA driver installation: `--skip-tags nvidia`
 
 
 

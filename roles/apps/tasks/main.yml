@@ -42,14 +42,6 @@
   when: user_name != 'root'
   tags: [software, virtualbox]
 
-# --- Flatpak Applications ---
-- name: System | Enable Flathub Repository
-  community.general.flatpak_remote:
-    name: flathub
-    state: present
-    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
-  tags: [system, flatpak]
-
 - name: Software | Install KDE specific flatpak applications
   community.general.flatpak:
     name: "{{ item }}"
@@ -172,7 +164,7 @@
     group: "{{ user_name }}"
     mode: '0755'
   when: user_name != 'root'
-  tags: [software, shortcuts, system]
+  tags: [software, shortcuts]
 
 - name: Shortcuts | Create local override for Steam shortcut
   ansible.builtin.copy:
@@ -215,7 +207,7 @@
   when: 
     - user_name != 'root'
     - not ansible_check_mode
-  tags: [brave, cedilla]
+  tags: [software, brave, cedilla]
 
 - name: Cedilla | Configure Brave to use X11 ozone platform
   ansible.builtin.replace:
@@ -225,7 +217,7 @@
   when: 
     - user_name != 'root'
     - not ansible_check_mode
-  tags: [brave, cedilla]
+  tags: [software, brave, cedilla]
 
 - name: Cedilla | Copy Chromium desktop file to local share
   ansible.builtin.copy:
@@ -239,7 +231,7 @@
   when: 
     - user_name != 'root'
     - not ansible_check_mode
-  tags: [chromium, cedilla]
+  tags: [software, chromium, cedilla]
 
 - name: Cedilla | Configure Chromium to use X11 ozone platform
   ansible.builtin.replace:
@@ -249,7 +241,7 @@
   when: 
     - user_name != 'root'
     - not ansible_check_mode
-  tags: [chromium, cedilla]
+  tags: [software, chromium, cedilla]
 
 - name: Cedilla | Update desktop database for browsers
   ansible.builtin.command:
@@ -259,4 +251,4 @@
   when: 
     - user_name != 'root'
     - not ansible_check_mode
-  tags: [brave, chromium, cedilla]
+  tags: [software, brave, chromium, cedilla]

@@ -16,6 +16,14 @@
   when: user_name != 'root'
   tags: [system, workspace]
 
+# --- Flatpak Applications ---
+- name: System | Enable Flathub Repository
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+  tags: [system, flatpak]
+
 # --- Kernel Maintenance ---
 - name: System | Kernel and Debug Maintenance
   ansible.builtin.import_tasks: kernel_maintenance.yml
@@ -106,7 +114,7 @@
     owner: "{{ item.name }}"
     mode: '0644'
   loop: "{{ zsh_users }}"
-  tags: [shell, nvidia, setup]
+  tags: [shell, setup]
 
 # --- GRUB ---
 - name: System | Configure GRUB settings

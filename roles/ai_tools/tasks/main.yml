@@ -7,7 +7,7 @@
     name: "@google/gemini-cli"
     global: yes
     state: present
-  tags: [software, gemini]
+  tags: [ai, gemini]
 
 - name: Software | Install GeminiCLI extensions for primary user
   ansible.builtin.command:
@@ -30,7 +30,7 @@
     - "'already installed' not in extension_install.stdout"
     - "'already installed' not in extension_install.stderr"
   when: user_name != 'root'
-  tags: [gemini, extensions]
+  tags: [ai, gemini, extensions]
 
 # --- Python AI Libraries ---
 - name: Python | Ensure pipx path is in user shell configuration
@@ -38,7 +38,7 @@
     cmd: "pipx ensurepath"
   become_user: "{{ user_name }}"
   changed_when: false
-  tags: [software, python, pipx]
+  tags: [ai, python, pipx]
 
 - name: Python | Install specialized python libraries via pipx
   community.general.pipx:
@@ -50,7 +50,7 @@
     - notebooklm-py
   register: pipx_install
   ignore_errors: "{{ ansible_check_mode }}"
-  tags: [software, python, markitdown, notebooklm]
+  tags: [ai, python, markitdown, notebooklm]
 
 - name: Python | Install extra features and playwright into pipx environments
   ansible.builtin.command:
@@ -63,7 +63,7 @@
     - { base: 'notebooklm-py', extra: 'playwright' }
   changed_when: false
   ignore_errors: "{{ ansible_check_mode }}"
-  tags: [software, python, markitdown, notebooklm]
+  tags: [ai, python, markitdown, notebooklm]
 
 - name: Python | Install Playwright Chromium in notebooklm-py venv
   ansible.builtin.command:
@@ -71,4 +71,4 @@
   become_user: "{{ user_name }}"
   changed_when: false
   ignore_errors: "{{ ansible_check_mode }}"
-  tags: [software, python, notebooklm, playwright]
+  tags: [ai, python, notebooklm, playwright]

@@ -11,8 +11,8 @@
       tags: [always]
 
   roles:
-    - { role: update, tags: [update, system] }
-    - { role: nvidia, tags: [nvidia, hardware] }
+    - { role: update, tags: [update] }
+    - { role: nvidia, tags: [nvidia] }
     - { role: common, tags: [common, system] }
     - { role: hardware, tags: [hardware, drivers] }
     - { role: desktop, tags: [desktop, UI] }

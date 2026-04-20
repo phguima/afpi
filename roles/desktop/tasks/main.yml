@@ -6,7 +6,7 @@
   ansible.builtin.dnf:
     name: "{{ fonts_packages }}"
     state: present
-  tags: [software, fonts]
+  tags: [desktop, fonts]
 
 # --- Visual Personalization ---
 - name: Desktop | Personalization (Wallpaper & Profile)
@@ -22,7 +22,7 @@
     group: "{{ user_name }}"
     mode: '0755'
   when: is_kde and user_name != 'root'
-  tags: [software, kde, konsole]
+  tags: [desktop, kde, konsole]
 
 - name: KDE | Copy konsole profile
   ansible.builtin.copy:
@@ -31,7 +31,7 @@
     owner: "{{ user_name }}"
     mode: '0644'
   when: is_kde and user_name != 'root'
-  tags: [software, kde, konsole]
+  tags: [desktop, kde, konsole]
 
 - name: KDE | Copy konsole color scheme
   ansible.builtin.copy:
@@ -40,7 +40,7 @@
     owner: "{{ user_name }}"
     mode: '0644'
   when: is_kde and user_name != 'root'
-  tags: [software, kde, konsole]
+  tags: [desktop, kde, konsole]
 
 - name: KDE | Disable konsole 'Remember window size'
   community.general.ini_file:
@@ -51,7 +51,7 @@
     owner: "{{ user_name }}"
     mode: '0644'
   when: is_kde and user_name != 'root'
-  tags: [software, kde, konsole]
+  tags: [desktop, kde, konsole]
 
 - name: KDE | Set default konsole profile
   community.general.ini_file:
@@ -62,7 +62,7 @@
     owner: "{{ user_name }}"
     mode: '0644'
   when: is_kde and user_name != 'root'
-  tags: [software, kde, konsole]
+  tags: [desktop, kde, konsole]
 
 - name: KDE | Expand individual tab widths to full window
   community.general.ini_file:
@@ -73,7 +73,7 @@
     owner: "{{ user_name }}"
     mode: '0644'
   when: is_kde and user_name != 'root'
-  tags: [software, kde, konsole]
+  tags: [desktop, kde, konsole]
 
 # --- GNOME Specific Configuration (PTYxis) ---
 - name: GNOME | Set PTYxis terminal window size and behavior
@@ -84,7 +84,7 @@
     - { key: "default-columns", value: "{{ ptyxis_default_columns }}" }
     - { key: "default-rows", value: "{{ ptyxis_default_rows }}" }
   when: is_gnome and user_name != 'root'
-  tags: [software, gnome, ptyxis]
+  tags: [desktop, gnome, ptyxis]
 
 - name: GNOME | Set PTYxis cursor and font settings
   ansible.builtin.command: "dconf write /org/gnome/Ptyxis/{{ item.key }} \"{{ item.value }}\""
@@ -95,7 +95,7 @@
     - { key: "use-system-font", value: "{{ ptyxis_use_system_font }}" }
     - { key: "font-name", value: "'{{ ptyxis_font_name }}'" }
   when: is_gnome and user_name != 'root'
-  tags: [software, gnome, ptyxis]
+  tags: [desktop, gnome, ptyxis]
 
 - name: GNOME | Get PTYxis default profile UUID
   ansible.builtin.shell: dconf read /org/gnome/Ptyxis/default-profile-uuid | tr -d "'"
@@ -103,7 +103,7 @@
   become_user: "{{ user_name }}"
   changed_when: false
   when: is_gnome and user_name != 'root'
-  tags: [software, gnome, ptyxis]
+  tags: [desktop, gnome, ptyxis]
 
 - name: GNOME | Set PTYxis transparency
   ansible.builtin.command: "dconf write /org/gnome/Ptyxis/Profiles/{{ ptyxis_default_uuid.stdout }}/opacity {{ ptyxis_opacity }}"
@@ -112,7 +112,7 @@
     - is_gnome 
     - user_name != 'root'
     - ptyxis_default_uuid.stdout != ""
-  tags: [software, gnome, ptyxis]
+  tags: [desktop, gnome, ptyxis]
 
 # --- Cedilla Configuration ---
 - name: Cedilla | Find system compose file
@@ -122,7 +122,7 @@
     sed -ne "s/^\([^:]*\):[ \t]*$LANG_VAL/\1/p" <"${COMPOSE_DIR}/compose.dir" | head -1
   register: system_compose_name
   changed_when: false
-  tags: [system, cedilla]
+  tags: [desktop, cedilla]
 
 - name: Cedilla | Ensure .XCompose exists (copy from system)
   ansible.builtin.copy:
@@ -136,7 +136,7 @@
   when: 
     - system_compose_name.stdout != ""
     - user_name != 'root'
-  tags: [system, cedilla]
+  tags: [desktop, cedilla]
 
 - name: Cedilla | Apply character mapping for cedilla (ç)
   ansible.builtin.replace:
@@ -147,7 +147,7 @@
     - { regex: 'ć', replace: 'ç' }
     - { regex: 'Ć', replace: 'Ç' }
   when: user_name != 'root'
-  tags: [system, cedilla]
+  tags: [desktop, cedilla]
 
 - name: Cedilla | Apply Flatpak overrides for Bitwarden (KDE)
   ansible.builtin.command:
@@ -157,7 +157,7 @@
   failed_when: false
   changed_when: false
   when: is_kde and user_name != 'root'
-  tags: [system, cedilla, flatpak]
+  tags: [desktop, cedilla, flatpak]
 
 - name: Cedilla | Apply Flatpak overrides for Zoom (KDE)
   ansible.builtin.command:
@@ -167,11 +167,11 @@
   failed_when: false
   changed_when: false
   when: is_kde and user_name != 'root'
-  tags: [system, zoom, cedilla, flatpak]
+  tags: [desktop, zoom, cedilla, flatpak]
 
 - name: Cedilla | Display completion message
   ansible.builtin.debug:
     msg:
       - "Cedilla fix applied to {{ user_home }}/.XCompose."
       - "Please log out of your session and re-login to effect changes."
-  tags: [system, cedilla]
+  tags: [desktop, cedilla]
