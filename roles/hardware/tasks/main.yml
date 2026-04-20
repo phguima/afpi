@@ -20,9 +20,14 @@
 
 - name: NVIDIA | Enable power management services
   ansible.builtin.systemd:
-    name: nvidia-{suspend,resume,hibernate}.service
+    name: "{{ item }}"
     enabled: yes
     state: started
+    daemon_reload: yes
+  loop:
+    - nvidia-suspend.service
+    - nvidia-resume.service
+    - nvidia-hibernate.service
   when: is_nvidia and has_nvidia_driver
   tags: [hardware, power]
 

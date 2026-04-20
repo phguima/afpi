@@ -6,9 +6,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.3.0
+*   **Current Version:** 2.3.1
 *   **Last Update:** April 20, 2026
-*   **Latest Improvement:** Overhauled tagging system across all roles for granular control and improved deployment flexibility.
+*   **Latest Improvement:** Enhanced environment discovery persistence across tags and fixed NVIDIA service automation logic.
 *   **Stability:** Production-ready for Fedora 41, 42, and 43.
 
 ## 🏗️ Architecture and Roles

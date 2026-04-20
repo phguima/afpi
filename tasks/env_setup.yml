@@ -7,6 +7,7 @@
     key: "{{ ansible_env.SUDO_USER }}"
   register: primary_user_data
   when: ansible_env.SUDO_USER is defined and ansible_env.SUDO_USER != 'root'
+  tags: [always]
 
 - name: Env Setup | Set primary user facts
   set_fact:
@@ -27,6 +28,7 @@
       - name: "{{ user_name }}"
         home: "{{ user_home }}"
   when: user_name != 'root'
+  tags: [always]
 
 - name: Env Setup | Identify target users for shell setup (Root only)
   set_fact:
@@ -34,18 +36,19 @@
       - name: "root"
         home: "/root"
   when: user_name == 'root'
+  tags: [always]
 
 - name: Env Setup | Detect ASUS system
   set_fact:
     is_asus: "{{ (ansible_system_vendor | default('') | lower is search('asus')) or (ansible_board_vendor | default('') | lower is search('asus')) }}"
-  tags: [hardware, asus]
+  tags: [always, hardware, asus]
 
 - name: Env Setup | Detect GPU Type
   ansible.builtin.shell: lspci | grep -iE "vga|3d|display"
   register: gpu_info_raw
   changed_when: false
   failed_when: false
-  tags: [hardware]
+  tags: [always, hardware]
 
 - name: Env Setup | Set GPU info fact
   set_fact:
@@ -53,27 +56,27 @@
     is_nvidia: "{{ gpu_info_raw.stdout is search('NVIDIA', ignorecase=True) }}"
     is_intel: "{{ gpu_info_raw.stdout is search('Intel', ignorecase=True) }}"
     is_amd: "{{ gpu_info_raw.stdout | lower | regex_search('\\b(amd|ati|Advanced Micro Devices)\\b') }}"
-  tags: [hardware]
+  tags: [always, hardware]
 
 - name: Env Setup | Check for proprietary NVIDIA driver
   ansible.builtin.shell: "command -v nvidia-smi && nvidia-smi"
   register: nvidia_smi_check_raw
   failed_when: false
   changed_when: false
-  tags: [hardware, detection, nvidia]
+  tags: [always, hardware, detection, nvidia]
 
 - name: Env Setup | Set NVIDIA driver fact
   set_fact:
     has_nvidia_driver: "{{ nvidia_smi_check_raw.rc == 0 }}"
-  tags: [hardware, detection, nvidia]
+  tags: [always, hardware, detection, nvidia]
 
 - name: Env Setup | Detect desktop environment
   set_fact:
     detected_xdg: "{{ lookup('env', 'XDG_CURRENT_DESKTOP') | default('') | upper }}"
-  tags: [system, detection]
+  tags: [always, system, detection]
 
 - name: Env Setup | Set DE Boolean Facts
   set_fact:
     is_gnome: "{{ 'GNOME' in detected_xdg }}"
     is_kde: "{{ 'KDE' in detected_xdg or 'PLASMA' in detected_xdg or 'KDE' in (ansible_env.XDG_CURRENT_DESKTOP | default('') | upper) }}"
-  tags: [system, detection]
+  tags: [always, system, detection]

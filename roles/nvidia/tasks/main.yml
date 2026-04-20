@@ -74,5 +74,4 @@
   when: 
     - is_nvidia_present
     - nvidia_installed_check.rc != 0
-  register: nvidia_installation_result
   tags: [nvidia]
