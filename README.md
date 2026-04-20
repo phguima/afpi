@@ -6,9 +6,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.2.2
-*   **Last Update:** April 19, 2026
-*   **Latest Improvement:** Decoupled NVIDIA driver installation into a standalone script (`nvidia.sh`) for better reliability and manual execution, while maintaining the Ansible roles for configuration and multimedia support.
+*   **Current Version:** 2.2.3
+*   **Last Update:** April 20, 2026
+*   **Latest Improvement:** Refined NVIDIA installation workflow into a reliable 3-step process (Update -> Driver -> Full Config) ensuring kernel compatibility and Secure Boot stability.
 *   **Stability:** Production-ready for Fedora 41, 42, and 43.
 
 ## 🏗️ Architecture and Roles
@@ -81,15 +81,15 @@ ansible-playbook site.yml --ask-vault-pass
 ```
 
 > [!IMPORTANT]
-> **NVIDIA Users:** To ensure compatibility of proprietary drivers with the latest kernel, it is highly recommended to follow this workflow:
-> 1. Run the system update role only: `ansible-playbook site.yml --tags common --ask-vault-pass`
-> 2. **Reboot** your machine to load the new kernel.
-> 3. Run the standalone script: `sudo ./nvidia.sh`
-> 4. **Reboot** to enroll MOK (if Secure Boot enabled).
-> 5. Run the full playbook (or skip common if already updated): `ansible-playbook site.yml --ask-vault-pass`
+> **NVIDIA Users:** To ensure compatibility of proprietary drivers with the latest kernel and Secure Boot signing, follow this specific 3-step workflow:
+> 1. **Update System:** `ansible-playbook site.yml --tags update --ask-vault-pass`
+> 2. **Reboot** to load the new kernel.
+> 3. **Install NVIDIA:** `ansible-playbook site.yml --tags nvidia --ask-vault-pass`
+> 4. **Reboot** to enroll the MOK key (if Secure Boot is enabled).
+> 5. **Finish Setup:** `ansible-playbook site.yml --skip-tags update,nvidia --ask-vault-pass`
 >
 > **Control Tips (Tags):**
-> - To skip system update if already done: `--skip-tags common`
+> - To skip system update if already done: `--skip-tags update`
 > - To skip NVIDIA driver installation: `--skip-tags nvidia`
 
 

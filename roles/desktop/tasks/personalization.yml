@@ -55,8 +55,6 @@
   when: is_kde and user_name != 'root' and not ansible_check_mode
   tags: [personalization, wallpaper, visual]
 
-
-
 # --- User Profile Picture (AccountsService) ---
 - name: Personalize | Ensure AccountsService user directory exists
   ansible.builtin.file:

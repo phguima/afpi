@@ -32,9 +32,29 @@ multimedia_packages:
   - gstreamer1-plugins-ugly
   - gstreamer1-libav
 
+nvidia_prerequisite_packages:
+  - akmods
+  - kmodtool
+  - openssl
+  - mokutil
+
+nvidia_driver_packages:
+  - akmod-nvidia
+  - gcc
+  - kernel-devel
+  - kernel-headers
+  - xorg-x11-drv-nvidia
+  - xorg-x11-drv-nvidia-cuda
+  - xorg-x11-drv-nvidia-libs
+  - xorg-x11-drv-nvidia-libs.i686
+
 nvidia_multimedia_packages:
   - libva-nvidia-driver
   - xorg-x11-drv-nvidia-cuda-libs
+
+nvidia_vulkan_packages:
+  - vulkan
+  - xorg-x11-drv-nvidia-cuda-libs  
 
 # Packages and Apps
 dnf_packages_common:

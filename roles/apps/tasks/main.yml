@@ -150,7 +150,6 @@
   delay: 10
   tags: [software, protonvpn]
 
-
 - name: ProtonVPN | Verify ProtonVPN installation
   ansible.builtin.command: rpm -q proton-vpn-gnome-desktop
   changed_when: false
@@ -174,7 +173,6 @@
     mode: '0755'
   when: user_name != 'root'
   tags: [software, shortcuts, system]
-
 
 - name: Shortcuts | Create local override for Steam shortcut
   ansible.builtin.copy:

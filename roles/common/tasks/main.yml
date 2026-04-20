@@ -1,23 +1,6 @@
 ---
 # Tasks for 'common' role
 
-# --- DNF optimization & RPM Fusion ---
-- name: DNF | Install dnf-plugins-core
-  ansible.builtin.dnf:
-    name: dnf-plugins-core
-    state: present
-  tags: [system, dnf]
-
-- name: System | Optimize DNF Configuration
-  ansible.builtin.lineinfile:
-    path: /etc/dnf/dnf.conf
-    line: "{{ item.key }}={{ item.value }}"
-    state: present
-  loop:
-    - { key: "max_parallel_downloads", value: "{{ dnf_max_parallel_downloads }}" }
-    - { key: "fastestmirror", value: "{{ dnf_fastestmirror }}" }
-  tags: [system, dnf]
-
 - name: System | Set System Hostname
   ansible.builtin.hostname:
     name: "{{ system_hostname }}"
@@ -32,23 +15,6 @@
     mode: '0755'
   when: user_name != 'root'
   tags: [system, workspace]
-
-- name: System | Add RPM Fusion repositories
-  ansible.builtin.dnf:
-    name:
-      - "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_major_version }}.noarch.rpm"
-      - "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_major_version }}.noarch.rpm"
-    state: present
-    disable_gpg_check: yes
-  tags: [system, rpmfusion]
-
-- name: System | Upgrade all packages and refresh dnf cache
-  ansible.builtin.dnf:
-    name: "*"
-    state: latest
-    update_cache: yes
-  become: true
-  tags: [system, dnf]
 
 # --- Kernel Maintenance ---
 - name: System | Kernel and Debug Maintenance
