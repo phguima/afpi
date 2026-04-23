@@ -6,9 +6,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.3.1
-*   **Last Update:** April 20, 2026
-*   **Latest Improvement:** Enhanced environment discovery persistence across tags and fixed NVIDIA service automation logic.
+*   **Current Version:** 2.3.2
+*   **Last Update:** April 23, 2026
+*   **Latest Improvement:** Removed standalone scripts in favor of full Ansible integration and added system freeze mitigation guides.
 *   **Stability:** Production-ready for Fedora 41, 42, and 43.
 
 ## 🏗️ Architecture and Roles
@@ -26,7 +26,7 @@ The project is organized to isolate responsibilities, ensuring idempotency and e
 
 ## 🏷️ Granular Control (Tags)
 
-AFPI now features a comprehensive tagging system that allows you to run specific parts of the configuration:
+AFPI features a comprehensive tagging system that allows you to run specific parts of the configuration:
 
 | Category | Primary Tags | Description |
 | :--- | :--- | :--- |
@@ -37,46 +37,16 @@ AFPI now features a comprehensive tagging system that allows you to run specific
 | **Software** | `apps`, `software`, `dnf`, `flatpak` | Application installation via DNF or Flatpak. |
 | **AI** | `ai`, `gemini`, `extensions`, `python` | Gemini CLI, extensions, and AI-related Python libraries. |
 
-### Usage Examples
-*   **Run only system updates:** `ansible-playbook site.yml --tags update --ask-vault-pass`
-*   **Apply only visual changes:** `ansible-playbook site.yml --tags visual --ask-vault-pass`
-*   **Fix cedilla across the system:** `ansible-playbook site.yml --tags cedilla --ask-vault-pass`
-*   **Skip NVIDIA and updates:** `ansible-playbook site.yml --skip-tags update,nvidia --ask-vault-pass`
-
 ## 🔐 Secrets Management (Ansible Vault)
 
 AFPI uses **Ansible Vault** to protect sensitive information. Since the provided `group_vars/all/secrets.yml` is encrypted, you must create your own if you fork this project.
 
 ### Required Variables in `secrets.yml`
-The following variables must be defined in your secrets file:
-
 | Variable | Description | Example / Usage |
 | :--- | :--- | :--- |
 | `api_keys` | Block of environment exports for your shell | `export SERVICE_API_KEY="your_value_here"` |
 | `mok_password` | Password for NVIDIA MOK enrollment | Used to sign drivers for Secure Boot |
-| `user_profile_picture_base64` | Base64 string of your profile photo | Optional (see instructions below) |
-
-### Encrypt for the first time
-```bash
-ansible-vault encrypt group_vars/all/secrets.yml
-```
-
-### Edit existing secrets
-Do not open the file directly. Use the command below to edit in plain text (Ansible will re-encrypt upon saving):
-```bash
-ansible-vault edit group_vars/all/secrets.yml
-```
-
-### Permanently decrypt
-```bash
-ansible-vault decrypt group_vars/all/secrets.yml
-```
-
-### Encrypt Profile Picture (Total Privacy)
-To avoid uploading your personal photo to the repository, you can store it encrypted in the Vault:
-1. Generate the string: `base64 -w 0 path/to/photo.jpg > string.txt`
-2. Add to `secrets.yml`: `user_profile_picture_base64: "CONTENT_FROM_STRING.TXT"`
-3. AFPI will detect the variable and create the `.face.icon` file dynamically.
+| `user_profile_picture_base64` | Base64 string of your profile photo | Optional |
 
 ## 🚀 Getting Started
 
@@ -86,42 +56,50 @@ Prepare the Ansible environment:
 ./bootstrap.sh
 ```
 
-### 2. Install NVIDIA Drivers (Optional)
-If you have an NVIDIA GPU and want proprietary drivers with Secure Boot support, run the standalone script:
-```bash
-sudo ./nvidia.sh
-```
-Follow the on-screen instructions for MOK enrollment.
-
-### 3. Run the Playbook
+### 2. Run the Playbook
 Apply the full configuration (the provided `ansible.cfg` is optimized for faster deployment):
 ```bash
-ansible-playbook site.yml --ask-vault-pass
+ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass
 ```
 
 > [!IMPORTANT]
-> **NVIDIA Users:** To ensure compatibility of proprietary drivers with the latest kernel and Secure Boot signing, follow this specific 3-step workflow:
-> 1. **Update System:** `ansible-playbook site.yml --tags update --ask-vault-pass`
+> **NVIDIA Users:** To ensure compatibility of proprietary drivers with the latest kernel and Secure Boot signing, follow this specific 3-step workflow using tags:
+> 1. **Update System:** `ansible-playbook -i inventory.ini site.yml --tags update -K --ask-vault-pass`
 > 2. **Reboot** to load the new kernel.
-> 3. **Install NVIDIA:** `ansible-playbook site.yml --tags nvidia --ask-vault-pass`
+> 3. **Install NVIDIA Drivers:** `ansible-playbook -i inventory.ini site.yml --tags nvidia -K --ask-vault-pass`
 > 4. **Reboot** to enroll the MOK key (if Secure Boot is enabled).
-> 5. **Finish Setup:** `ansible-playbook site.yml --skip-tags update,nvidia --ask-vault-pass`
+> 5. **Finish Setup:** `ansible-playbook -i inventory.ini site.yml --skip-tags update,nvidia -K --ask-vault-pass`
 
+## ⚠️ Troubleshooting: System Freezes
 
+Some laptops (especially those with hybrid graphics or specific ASUS/NVIDIA combinations) may experience a system freeze during the `hardware` role.
+
+1.  **Hard Reboot** the machine (hold power button).
+2.  Run the playbook skipping the power management and hardware-specific tags to isolate the issue:
+    ```bash
+    ansible-playbook site.yml --skip-tags power,asus --ask-vault-pass
+    ```
+3.  If the playbook finishes successfully with these skips, the conflict is likely in the NVIDIA Deep Power Management settings or the `supergfxd` service.
 
 ## 🛠️ AFPI Differentiators
+
+### Intelligent Environment Discovery
+AFPI doesn't just run blindly. The `env_setup.yml` core task dynamically discovers your machine's profile:
+*   **Hardware Detection:** Identifies NVIDIA, Intel, or AMD GPUs and applies specific acceleration packages.
+*   **Vendor Awareness:** Specifically detects ASUS ROG/TUF systems to enable `asusctl` and `supergfxctl` tools.
+*   **Desktop Agnostic:** Automatically identifies if you are running GNOME or KDE Plasma and applies environment-specific terminal profiles (PTYxis or Konsole) and apps.
 
 ### Zero-Config Shell
 ZSH configuration has been simplified. The `kali-like-alt` theme manages its own dependencies (syntax highlighting and autosuggestions), reducing playbook complexity and execution time.
 
 ### Automated Resilience
-The system handles common installation failures automatically, such as external repository synchronization (ProtonVPN) and hardware-specific configurations. It implements a **Double-Guard** logic (repository validation + intelligent retries) to mitigate mirror instabilities during deployment.
+The system handles common installation failures automatically, such as external repository synchronization (ProtonVPN). It implements a **Double-Guard** logic (repository validation + intelligent retries) to mitigate mirror instabilities.
 
 ### Robust NVIDIA & Secure Boot Automation
-The standalone `nvidia.sh` script features an advanced MOK (Machine Owner Key) management system:
+The `nvidia` role implements an advanced MOK (Machine Owner Key) management system entirely via Ansible:
 *   **Intelligent Detection:** Detects existing keys, pending enrollments, and kernel status to avoid redundant operations.
-*   **Forced Signing:** Automatically triggers `akmods` and `dracut` to ensure modules are signed and included in the initramfs immediately.
-*   **Secure Pipe:** Uses high-reliability password injection for `mokutil` to ensure smooth enrollment during the first reboot.
+*   **Integrated Signing:** Automatically triggers `akmods` and `dracut` to ensure modules are signed and included in the initramfs immediately.
+*   **Secure Pipe:** Uses high-reliability password injection for `mokutil` via Vault secrets.
 
 ### Universal Cedilla (ç) Fix
-Fine-tuned in three layers (System, Flatpak, and Ozone/X11) to ensure the cedilla works perfectly across all applications, including browsers and communication tools.
+Fine-tuned in three layers (System, Flatpak, and Ozone/X11) to ensure the cedilla works perfectly across all applications.
