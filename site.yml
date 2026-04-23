@@ -13,8 +13,8 @@
   roles:
     - { role: update, tags: [update] }
     - { role: nvidia, tags: [nvidia] }
-    - { role: common, tags: [common, system] }
     - { role: hardware, tags: [hardware, drivers] }
+    - { role: common, tags: [common, system] }
     - { role: desktop, tags: [desktop, UI] }
     - { role: apps, tags: [apps, software] }
     - { role: ai_tools, tags: [ai, gemini] }

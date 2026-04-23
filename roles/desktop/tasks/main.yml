@@ -8,11 +8,6 @@
     state: present
   tags: [desktop, fonts]
 
-# --- Visual Personalization ---
-- name: Desktop | Personalization (Wallpaper & Profile)
-  ansible.builtin.import_tasks: personalization.yml
-  tags: [personalization, desktop, visual]
-
 # --- KDE Specific Configuration ---
 - name: KDE | Ensure konsole directory exists
   ansible.builtin.file:

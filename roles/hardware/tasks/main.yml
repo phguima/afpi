@@ -1,6 +1,7 @@
 ---
 # Tasks for 'hardware' role
 
+# --- NVIDIA Post Install Configuration ---
 - name: NVIDIA | Mark akmod-nvidia as user-installed to prevent autoremove
   ansible.builtin.command: sudo dnf mark user akmod-nvidia
   when: is_nvidia and has_nvidia_driver
@@ -74,6 +75,16 @@
   ansible.builtin.dnf:
     name: "{{ asus_packages }}"
     state: present
+  when: is_asus
+  tags: [hardware, asus]
+
+- name: ASUS | Ensure /etc/asusd directory exists
+  ansible.builtin.file:
+    path: /etc/asusd
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
   when: is_asus
   tags: [hardware, asus]
 

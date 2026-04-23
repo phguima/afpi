@@ -74,13 +74,14 @@ dnf_packages_common:
   - p7zip
   - p7zip-plugins
   - rawtherapee
-  - solaar
+#  - solaar
   - steam
   - testdisk
   - tmux
   - tuptime
   - unrar
   - unzip
+  - uv
   - vim
   - VirtualBox
   - vlc
