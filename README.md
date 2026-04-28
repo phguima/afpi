@@ -6,9 +6,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.3.2
-*   **Last Update:** April 23, 2026
-*   **Latest Improvement:** Removed standalone scripts in favor of full Ansible integration and added system freeze mitigation guides.
+*   **Current Version:** 2.3.3
+*   **Last Update:** April 28, 2026
+*   **Latest Improvement:** Added sqlitebrowser to common packages and enhanced pipx shell integration with intelligent change reporting.
 *   **Stability:** Production-ready for Fedora 41, 42, and 43.
 
 ## 🏗️ Architecture and Roles

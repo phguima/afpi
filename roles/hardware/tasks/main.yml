@@ -2,30 +2,30 @@
 # Tasks for 'hardware' role
 
 # --- NVIDIA Post Install Configuration ---
-- name: NVIDIA | Mark akmod-nvidia as user-installed to prevent autoremove
-  ansible.builtin.command: sudo dnf mark user akmod-nvidia
-  when: is_nvidia and has_nvidia_driver
-  tags: [hardware, setup]
+#- name: NVIDIA | Mark akmod-nvidia as user-installed to prevent autoremove
+#  ansible.builtin.command: sudo dnf mark user akmod-nvidia
+#  when: is_nvidia and has_nvidia_driver
+#  tags: [hardware, setup]
 
-- name: NVIDIA | Install power management packages
-  ansible.builtin.dnf:
-    name: xorg-x11-drv-nvidia-power
-    state: present
-  when: is_nvidia and has_nvidia_driver
-  tags: [hardware, power]
+#- name: NVIDIA | Install power management packages
+#  ansible.builtin.dnf:
+#    name: xorg-x11-drv-nvidia-power
+#    state: present
+#  when: is_nvidia and has_nvidia_driver
+#  tags: [hardware, power]
 
-- name: NVIDIA | Enable power management services
-  ansible.builtin.systemd:
-    name: "{{ item }}"
-    enabled: yes
-    state: started
-    daemon_reload: yes
-  loop:
-    - nvidia-suspend.service
-    - nvidia-resume.service
-    - nvidia-hibernate.service
-  when: is_nvidia and has_nvidia_driver
-  tags: [hardware, power]
+#- name: NVIDIA | Enable power management services
+#  ansible.builtin.systemd:
+#    name: "{{ item }}"
+#    enabled: yes
+#    state: started
+#    daemon_reload: yes
+#  loop:
+#    - nvidia-suspend.service
+#    - nvidia-resume.service
+#    - nvidia-hibernate.service
+#  when: is_nvidia and has_nvidia_driver
+#  tags: [hardware, power]
 
 - name: NVIDIA | Install NVIDIA Vulkan support
   ansible.builtin.dnf:

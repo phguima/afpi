@@ -34,10 +34,11 @@
 
 # --- Python AI Libraries ---
 - name: Python | Ensure pipx path is in user shell configuration
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: "pipx ensurepath"
   become_user: "{{ user_name }}"
-  changed_when: false
+  register: pipx_ensurepath_res
+  changed_when: "'is already in PATH' not in pipx_ensurepath_res.stdout"
   tags: [ai, python, pipx]
 
 - name: Python | Install specialized python libraries via pipx

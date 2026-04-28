@@ -75,6 +75,7 @@ dnf_packages_common:
   - p7zip-plugins
   - rawtherapee
 #  - solaar
+  - sqlitebrowser
   - steam
   - testdisk
   - tmux
