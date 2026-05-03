@@ -6,9 +6,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.3.4
+*   **Current Version:** 2.3.5
 *   **Last Update:** May 3, 2026
-*   **Latest Improvement:** Integrated ClamAV freshclam service and consolidated MarkItDown extra features for a more robust AI ecosystem.
+*   **Latest Improvement:** Fixed `is_amd` variable stability to prevent `NoneType` errors on VirtualBox and newer Ansible environments. Consolidated ClamAV and MarkItDown features.
 *   **Stability:** Production-ready for Fedora 41, 42, and 43.
 
 ## 🏗️ Architecture and Roles
