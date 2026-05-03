@@ -49,6 +49,7 @@
   loop:
     - markitdown
     - notebooklm-py
+    - pdf2docx
   register: pipx_install
   ignore_errors: "{{ ansible_check_mode }}"
   tags: [ai, python, markitdown, notebooklm]
@@ -58,8 +59,7 @@
     cmd: "pipx inject {{ item.base }} {{ item.extra }}"
   become_user: "{{ user_name }}"
   loop:
-    - { base: 'markitdown', extra: 'markitdown[pdf]' }
-    - { base: 'markitdown', extra: 'markitdown[docx]' }
+    - { base: 'markitdown', extra: 'markitdown[all]' }
     - { base: 'notebooklm-py', extra: 'notebooklm-py[browser]' }
     - { base: 'notebooklm-py', extra: 'playwright' }
   changed_when: false
