@@ -148,6 +148,9 @@ omz_plugins:
 # Nota: zsh-autosuggestions e zsh-syntax-highlighting são gerenciados internamente pelo tema kali-like-alt.
 
 
+# Antigravity CLI settings
+antigravity_install_script_url: "https://antigravity.google/cli/install.sh"
+
 # Zsh Aliases
 zsh_aliases: |
   alias zshconfig="nano ~/.zshrc"

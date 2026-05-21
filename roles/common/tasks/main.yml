@@ -98,6 +98,15 @@
   loop: "{{ zsh_users }}"
   tags: [shell, omz]
 
+# --- Antigravity CLI ---
+- name: Antigravity | Install Antigravity CLI for users
+  ansible.builtin.shell:
+    cmd: "curl -fsSL {{ antigravity_install_script_url }} | bash"
+    creates: "{{ item.home }}/.local/bin/agy"
+  become_user: "{{ item.name }}"
+  loop: "{{ zsh_users }}"
+  tags: [shell, antigravity]
+
 - name: ZSH | Add NVIDIA and API key placeholders to .zshrc
   ansible.builtin.blockinfile:
     path: "{{ item.home }}/.zshrc"
