@@ -99,6 +99,7 @@ dnf_packages_kde:
 
 
 # Flatpak Apps
+bitwarden_zoom_factor: "0.9"
 flatpak_apps_common:
   - com.bitwarden.desktop
   - com.dec05eba.gpu_screen_recorder
