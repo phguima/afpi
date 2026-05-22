@@ -4,6 +4,9 @@
 
 AFPI is a modular and intelligent system for Fedora Workstation post-installation (Validated on Fedora 41-43). It uses an architecture based on **Roles** and **Dynamic Templates**, allowing your desktop customization and hardware optimizations to be applied consistently, making your workstation deployment fully automated and "hardware-aware".
 
+> [!WARNING]
+> **Disclaimer:** This project is tailored specifically for my personal environment, preferences, and hardware configuration. If you choose to use it, you must thoroughly review all roles, configurations, and variables, and customize them to fit your own specific requirements and hardware setup. Use it at your own risk.
+
 ## 📊 Project Status
 
 *   **Current Version:** 2.3.5
