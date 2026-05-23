@@ -144,44 +144,6 @@
   when: user_name != 'root'
   tags: [desktop, cedilla]
 
-- name: Cedilla | Apply Flatpak overrides for Bitwarden (KDE)
-  ansible.builtin.command:
-    cmd: "flatpak override --user --nosocket=wayland --env=GTK_IM_MODULE=cedilla --env=XDG_CURRENT_DESKTOP=KDE --env=GTK_USE_PORTAL=1 com.bitwarden.desktop"
-  become_user: "{{ user_name }}"
-  register: bitwarden_override_kde
-  failed_when: false
-  changed_when: false
-  when: is_kde and user_name != 'root'
-  tags: [desktop, cedilla, flatpak]
-
-- name: Bitwarden | Create local desktop entry with forced scale factor
-  ansible.builtin.copy:
-    src: "/var/lib/flatpak/exports/share/applications/com.bitwarden.desktop.desktop"
-    dest: "/home/{{ user_name }}/.local/share/applications/com.bitwarden.desktop.desktop"
-    remote_src: yes
-    owner: "{{ user_name }}"
-    mode: '0644'
-  when: user_name != 'root'
-  tags: [desktop, bitwarden]
-
-- name: Bitwarden | Force zoom factor in local desktop entry
-  ansible.builtin.replace:
-    path: "/home/{{ user_name }}/.local/share/applications/com.bitwarden.desktop.desktop"
-    regexp: '^Exec=(.*) %U'
-    replace: 'Exec=\1 --force-device-scale-factor={{ bitwarden_zoom_factor }} %U'
-  when: user_name != 'root'
-  tags: [desktop, bitwarden]
-
-- name: Cedilla | Apply Flatpak overrides for Zoom (KDE)
-  ansible.builtin.command:
-    cmd: "flatpak override --user --nosocket=wayland --env=GTK_IM_MODULE=cedilla --env=QT_IM_MODULE=cedilla --env=XDG_CURRENT_DESKTOP=KDE --env=GTK_USE_PORTAL=1 --filesystem=home us.zoom.Zoom"
-  become_user: "{{ user_name }}"
-  register: zoom_override
-  failed_when: false
-  changed_when: false
-  when: is_kde and user_name != 'root'
-  tags: [desktop, zoom, cedilla, flatpak]
-
 - name: Cedilla | Display completion message
   ansible.builtin.debug:
     msg:
