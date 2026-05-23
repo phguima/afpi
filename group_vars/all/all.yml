@@ -134,7 +134,7 @@ brave_gpg_key: "https://brave-browser-rpm-release.s3.brave.com/brave-core.asc"
 brave_repo_url: "https://brave-browser-rpm-release.s3.brave.com/x86_64/"
 
 # ProtonVPN Settings
-protonvpn_repo_url: "https://repo.protonvpn.com/fedora-{{ ansible_distribution_major_version }}-stable/protonvpn-stable-release/protonvpn-stable-release-1.0.3-1.noarch.rpm"
+protonvpn_repo_url: "https://repo.protonvpn.com/fedora-{{ ansible_facts['distribution_major_version'] }}-stable/protonvpn-stable-release/protonvpn-stable-release-1.0.3-1.noarch.rpm"
 
 # VS Code Settings
 vscode_gpg_key: "https://packages.microsoft.com/keys/microsoft.asc"

@@ -4,19 +4,19 @@
 - name: Env Setup | Get primary user data
   ansible.builtin.getent:
     database: passwd
-    key: "{{ ansible_env.SUDO_USER }}"
+    key: "{{ ansible_facts['env']['SUDO_USER'] }}"
   register: primary_user_data
-  when: ansible_env.SUDO_USER is defined and ansible_env.SUDO_USER != 'root'
+  when: ansible_facts['env']['SUDO_USER'] is defined and ansible_facts['env']['SUDO_USER'] != 'root'
   tags: [always]
 
 - name: Env Setup | Set primary user facts
   set_fact:
-    user_name: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+    user_name: "{{ ansible_facts['env']['SUDO_USER'] | default(ansible_facts['user_id']) }}"
     user_home: >-
       {{ 
-        primary_user_data.ansible_facts.getent_passwd[ansible_env.SUDO_USER][4] 
-        if (primary_user_data.ansible_facts is defined and ansible_env.SUDO_USER is defined and ansible_env.SUDO_USER != 'root') 
-        else (ansible_env.HOME | default('/root')) 
+        primary_user_data.ansible_facts.getent_passwd[ansible_facts['env']['SUDO_USER']][4] 
+        if (primary_user_data.ansible_facts is defined and ansible_facts['env']['SUDO_USER'] is defined and ansible_facts['env']['SUDO_USER'] != 'root') 
+        else (ansible_facts['env']['HOME'] | default('/root')) 
       }}
   tags: [always]
 
@@ -49,7 +49,7 @@
 
 - name: Env Setup | Detect ASUS system
   set_fact:
-    is_asus: "{{ (ansible_system_vendor | default('') | lower is search('asus')) or (ansible_board_vendor | default('') | lower is search('asus')) }}"
+    is_asus: "{{ (ansible_facts['system_vendor'] | default('') | lower is search('asus')) or (ansible_facts['board_vendor'] | default('') | lower is search('asus')) }}"
   tags: [always, hardware, asus]
 
 - name: Env Setup | Detect GPU Type
@@ -88,5 +88,5 @@
 - name: Env Setup | Set DE Boolean Facts
   set_fact:
     is_gnome: "{{ 'GNOME' in detected_xdg }}"
-    is_kde: "{{ 'KDE' in detected_xdg or 'PLASMA' in detected_xdg or 'KDE' in (ansible_env.XDG_CURRENT_DESKTOP | default('') | upper) }}"
+    is_kde: "{{ 'KDE' in detected_xdg or 'PLASMA' in detected_xdg or 'KDE' in (ansible_facts['env']['XDG_CURRENT_DESKTOP'] | default('') | upper) }}"
   tags: [always, system, detection]

@@ -3,8 +3,8 @@
 
 - name: Kernel | Prevent removal of debug packages if running debug kernel
   ansible.builtin.fail:
-    msg: "You are currently running a DEBUG kernel ({{ ansible_kernel }}). Please boot into a normal kernel before proceeding."
-  when: "'debug' in ansible_kernel"
+    msg: "You are currently running a DEBUG kernel ({{ ansible_facts['kernel'] }}). Please boot into a normal kernel before proceeding."
+  when: "'debug' in ansible_facts['kernel']"
   tags: [system, kernel]
 
 - name: Kernel | Get list of installed debug kernels
