@@ -15,8 +15,8 @@
     - { role: nvidia, tags: [nvidia] }
     - { role: hardware, tags: [hardware, drivers] }
     - { role: common, tags: [common, system] }
-    - { role: desktop, tags: [desktop, UI] }
     - { role: apps, tags: [apps, software] }
+    - { role: desktop, tags: [desktop, UI] }
     - { role: ai_tools, tags: [ai, gemini] }
 
   post_tasks:
