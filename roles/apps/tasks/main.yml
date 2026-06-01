@@ -260,8 +260,8 @@
     - not ansible_check_mode
   tags: [software, brave, chromium, cedilla]
 
-  # --- Flatp overrides and cedilla fixes ---
-  - name: Cedilla | Apply Flatpak overrides for Bitwarden (KDE)
+# --- Flatp overrides and cedilla fixes ---
+- name: Cedilla | Apply Flatpak overrides for Bitwarden (KDE)
   ansible.builtin.command:
     cmd: "flatpak override --user --nosocket=wayland --env=GTK_IM_MODULE=cedilla --env=XDG_CURRENT_DESKTOP=KDE --env=GTK_USE_PORTAL=1 com.bitwarden.desktop"
   become_user: "{{ user_name }}"
