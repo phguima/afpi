@@ -20,7 +20,7 @@ intel_media_packages:
 
 amd_multimedia_packages:
   - mesa-va-drivers-freeworld
-  - mesa-vdpau-drivers-freeworld
+#  - mesa-vdpau-drivers-freeworld
   - libva-utils
   - vdpauinfo
 
@@ -163,11 +163,15 @@ zsh_aliases: |
   alias ohmyzsh="nano ~/.oh-my-zsh"
   alias lls="ls --color -lh --group-directories-first"
   alias llsa="ls --color -lha --group-directories-first"
+  alias claudecli="cd ~/wks; clear; claude"
+  alias agycli="cd ~/wks; clear; agy"
+  alias antigravity="cd ~/wks/tools/antigravity; ./antigravity --ozone-platform=x11"
+  #alias antigravity="cd ~/wks/tools/antigravity; ./antigravity"
   alias open-thevoid="udisksctl unlock -b /dev/nvme1n1p3; udisksctl mount -b /dev/mapper/luks-ad99f7e6-cf3a-4581-9c46-de99119b00d4"
   alias close-thevoid="udisksctl unmount -b /dev/mapper/luks-ad99f7e6-cf3a-4581-9c46-de99119b00d4; udisksctl lock -b /dev/nvme1n1p3"
   alias clean-cache="sudo sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
   alias nvidia-run="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0"
-  alias full-update="flatpak update; sudo npm update -g; sudo dnf upgrade --refresh -y"
+  alias full-update="flatpak update -y; sudo npm update -g; sudo dnf upgrade --refresh -y"
 
 # Personalization
 user_profile_picture: "profile_1.jpg"
