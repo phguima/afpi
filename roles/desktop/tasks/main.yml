@@ -138,9 +138,13 @@
     path: "{{ user_home }}/.XCompose"
     regexp: "{{ item.regex }}"
     replace: "{{ item.replace }}"
+  # Replace the keysyms too (U0107/U0106): apps that read the keysym instead of the string
+  # (e.g. Chromium on Wayland) would otherwise still get "ć".
   loop:
     - { regex: 'ć', replace: 'ç' }
     - { regex: 'Ć', replace: 'Ç' }
+    - { regex: 'U0107', replace: 'ccedilla' }
+    - { regex: 'U0106', replace: 'Ccedilla' }
   when: user_name != 'root'
   tags: [desktop, cedilla]
 

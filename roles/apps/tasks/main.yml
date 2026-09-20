@@ -88,7 +88,8 @@
 
 - name: Brave | Install Brave
   ansible.builtin.dnf:
-    name: brave-browser
+    name: "{{ brave_packages }}"
+    #name: brave-browser
     state: present
   tags: [software, brave]
 
@@ -201,100 +202,27 @@
   when: user_name != 'root'
   tags: [software, steam, gpu]
 
-# --- Browser Cedilla Fix (X11 Ozone) ---
-- name: Cedilla | Copy Brave desktop file to local share
-  ansible.builtin.copy:
-    src: /usr/share/applications/brave-browser.desktop
-    dest: "{{ user_home }}/.local/share/applications/brave-browser.desktop"
-    remote_src: yes
-    owner: "{{ user_name }}"
-    group: "{{ user_name }}"
-    mode: '0644'
-    force: no
-  when: 
-    - user_name != 'root'
-    - not ansible_check_mode
-  tags: [software, brave, cedilla]
-
-- name: Cedilla | Configure Brave to use X11 ozone platform
-  ansible.builtin.replace:
-    path: "{{ user_home }}/.local/share/applications/brave-browser.desktop"
-    regexp: '^Exec=((?!.*--ozone-platform=x11).*?)(\s+(%[uU]|--incognito|--new-window))?$'
-    replace: 'Exec=\1 --ozone-platform=x11\2'
-  when: 
-    - user_name != 'root'
-    - not ansible_check_mode
-  tags: [software, brave, cedilla]
-
-- name: Cedilla | Copy Chromium desktop file to local share
-  ansible.builtin.copy:
-    src: /usr/share/applications/chromium-browser.desktop
-    dest: "{{ user_home }}/.local/share/applications/chromium-browser.desktop"
-    remote_src: yes
-    owner: "{{ user_name }}"
-    group: "{{ user_name }}"
-    mode: '0644'
-    force: no
-  when: 
-    - user_name != 'root'
-    - not ansible_check_mode
-  tags: [software, chromium, cedilla]
-
-- name: Cedilla | Configure Chromium to use X11 ozone platform
-  ansible.builtin.replace:
-    path: "{{ user_home }}/.local/share/applications/chromium-browser.desktop"
-    regexp: '^Exec=((?!.*--ozone-platform=x11).*?)(\s+(%[uU]|--incognito|--new-window))?$'
-    replace: 'Exec=\1 --ozone-platform=x11\2'
-  when: 
-    - user_name != 'root'
-    - not ansible_check_mode
-  tags: [software, chromium, cedilla]
-
-- name: Cedilla | Update desktop database for browsers
+# --- Flatpak overrides and cedilla fixes ---
+# Bitwarden runs on native Wayland (the Flatpak wrapper picks the display mode from the granted
+# sockets); the cedilla works there without GTK_IM_MODULE. X11 stays only as a fallback.
+- name: Wayland | Apply Flatpak overrides for Bitwarden (KDE)
   ansible.builtin.command:
-    cmd: "update-desktop-database {{ user_home }}/.local/share/applications/"
+    cmd: "flatpak override --user --socket=wayland --socket=fallback-x11 --nosocket=x11 --unset-env=GTK_IM_MODULE --env=XDG_CURRENT_DESKTOP=KDE --env=GTK_USE_PORTAL=1 com.bitwarden.desktop"
   become_user: "{{ user_name }}"
+  register: bitwarden_override_kde
+  failed_when: false
   changed_when: false
-  when: 
-    - user_name != 'root'
-    - not ansible_check_mode
-  tags: [software, brave, chromium, cedilla]
+  when: is_kde and user_name != 'root'
+  tags: [desktop, cedilla, flatpak]
 
-  # --- Flatp overrides and cedilla fixes ---
-  - name: Cedilla | Apply Flatpak overrides for Bitwarden (KDE)
-    ansible.builtin.command:
-      cmd: "flatpak override --user --nosocket=wayland --env=GTK_IM_MODULE=cedilla --env=XDG_CURRENT_DESKTOP=KDE --env=GTK_USE_PORTAL=1 com.bitwarden.desktop"
-    become_user: "{{ user_name }}"
-    register: bitwarden_override_kde
-    failed_when: false
-    changed_when: false
-    when: is_kde and user_name != 'root'
-    tags: [desktop, cedilla, flatpak]
-
-#- name: Bitwarden | Create local desktop entry with forced scale factor
-#  ansible.builtin.copy:
-#    src: "/var/lib/flatpak/exports/share/applications/com.bitwarden.desktop.desktop"
-#    dest: "/home/{{ user_name }}/.local/share/applications/com.bitwarden.desktop.desktop"
-#    remote_src: yes
-#    owner: "{{ user_name }}"
-#    mode: '0644'
-#  when: user_name != 'root'
-#  tags: [desktop, bitwarden]
-
-#- name: Bitwarden | Force zoom factor in bitwarden local desktop entry
-#  ansible.builtin.replace:
-#    path: "/home/{{ user_name }}/.local/share/applications/com.bitwarden.desktop.desktop"
-#    regexp: '^Exec=(.*) %U'
-#    replace: 'Exec=\1 --force-device-scale-factor={{ bitwarden_zoom_factor }} %U'
-#  when: user_name != 'root'
-  #tags: [desktop, bitwarden]
-
-- name: Cedilla | Apply Flatpak overrides for Zoom (KDE)
-    ansible.builtin.command:
-      cmd: "flatpak override --user --nosocket=wayland --env=GTK_IM_MODULE=cedilla --env=QT_IM_MODULE=cedilla --env=XDG_CURRENT_DESKTOP=KDE --env=GTK_USE_PORTAL=1 --filesystem=home us.zoom.Zoom"
-    become_user: "{{ user_name }}"
-    register: zoom_override
-    failed_when: false
-    changed_when: false
-    when: is_kde and user_name != 'root'
-    tags: [desktop, zoom, cedilla, flatpak]
+# Zoom hardcodes QT_QPA_PLATFORM=xcb, so it always runs on XWayland; the cedilla works there
+# through ~/.XCompose without the IM modules (--unset-env only cleans up older overrides).
+- name: Zoom | Apply Flatpak overrides (KDE)
+  ansible.builtin.command:
+    cmd: "flatpak override --user --socket=wayland --unset-env=GTK_IM_MODULE --unset-env=QT_IM_MODULE --env=XDG_CURRENT_DESKTOP=KDE --env=GTK_USE_PORTAL=1 --nofilesystem=home us.zoom.Zoom"
+  become_user: "{{ user_name }}"
+  register: zoom_override
+  failed_when: false
+  changed_when: false
+  when: is_kde and user_name != 'root'
+  tags: [desktop, zoom, cedilla, flatpak]

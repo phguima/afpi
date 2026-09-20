@@ -21,7 +21,7 @@ The project is organized to isolate responsibilities, ensuring idempotency and e
 *   **`common`**: System optimizations (DNF, RPM Fusion), kernel cleanup, and **Zero-Config ZSH** setup (Oh-My-Zsh with Kali-like theme and self-managed plugins).
 *   **`hardware`**: Driver detection and installation (Signed NVIDIA for Secure Boot, Intel, AMD), multimedia codecs, and ASUS ROG support.
 *   **`desktop`**: 
-    *   **Universal Cedilla (ç) Fix**: Fine-tuned in three layers (System, Flatpak, and Ozone/X11) to ensure the cedilla works perfectly across all applications.
+    *   **Universal Cedilla (ç) Fix**: Uses a `~/.XCompose` mapping (System) plus Flatpak overrides. Browsers, Bitwarden and Antigravity run on native Wayland with no extra fix; Zoom is the exception and always runs on XWayland (it hardcodes xcb), where the cedilla also works.
     *   **Visual**: Unified management of wallpapers (Desktop/SDDM), profile pictures, and terminal profiles (Konsole/PTYxis).
 
 *   **`apps`**: Complete suite via DNF and Flatpak, featuring GPU automation for Steam, **VirtualBox group management (vboxusers/vboxsf)**, and productivity tools (Brave, VS Code).
@@ -105,4 +105,4 @@ The `nvidia` role implements an advanced MOK (Machine Owner Key) management syst
 *   **Secure Pipe:** Uses high-reliability password injection for `mokutil` via Vault secrets.
 
 ### Universal Cedilla (ç) Fix
-Fine-tuned in three layers (System, Flatpak, and Ozone/X11) to ensure the cedilla works perfectly across all applications.
+Uses a `~/.XCompose` mapping (System) plus Flatpak overrides. Browsers, Bitwarden and Antigravity run on native Wayland with no extra fix; Zoom is the exception and always runs on XWayland (it hardcodes xcb), where the cedilla also works.

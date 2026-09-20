@@ -90,8 +90,6 @@ dnf_packages_common:
   - uv
   - vim
   - VirtualBox
-  - vlc
-  - vlc-bittorrent
 
 dnf_packages_gnome:
   - flatseal
@@ -104,7 +102,6 @@ dnf_packages_kde:
 
 
 # Flatpak Apps
-bitwarden_zoom_factor: "0.9"
 flatpak_apps_common:
   - com.bitwarden.desktop
   - com.dec05eba.gpu_screen_recorder
@@ -138,6 +135,9 @@ asus_packages:
 # Brave Browser Settings
 brave_gpg_key: "https://brave-browser-rpm-release.s3.brave.com/brave-core.asc"
 brave_repo_url: "https://brave-browser-rpm-release.s3.brave.com/x86_64/"
+brave_packages:
+  - brave-browser
+  - brave-origin
 
 # ProtonVPN Settings
 protonvpn_repo_url: "https://repo.protonvpn.com/fedora-{{ ansible_facts['distribution_major_version'] }}-stable/protonvpn-stable-release/protonvpn-stable-release-1.0.3-1.noarch.rpm"
@@ -165,8 +165,7 @@ zsh_aliases: |
   alias llsa="ls --color -lha --group-directories-first"
   alias claudecli="cd ~/wks; clear; claude"
   alias agycli="cd ~/wks; clear; agy"
-  alias antigravity="cd ~/wks/tools/antigravity; ./antigravity --ozone-platform=x11"
-  #alias antigravity="cd ~/wks/tools/antigravity; ./antigravity"
+  alias antigravity="cd ~/wks/tools/antigravity; ./antigravity"
   alias open-thevoid="udisksctl unlock -b /dev/nvme1n1p3; udisksctl mount -b /dev/mapper/luks-ad99f7e6-cf3a-4581-9c46-de99119b00d4"
   alias close-thevoid="udisksctl unmount -b /dev/mapper/luks-ad99f7e6-cf3a-4581-9c46-de99119b00d4; udisksctl lock -b /dev/nvme1n1p3"
   alias clean-cache="sudo sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
