@@ -146,6 +146,10 @@ protonvpn_repo_url: "https://repo.protonvpn.com/fedora-{{ ansible_facts['distrib
 vscode_gpg_key: "https://packages.microsoft.com/keys/microsoft.asc"
 vscode_repo_url: "https://packages.microsoft.com/yumrepos/vscode"
 
+# GitHub CLI Settings
+gh_gpg_key: "https://cli.github.com/packages/githubcli-archive-keyring.asc"
+gh_repo_url: "https://cli.github.com/packages/rpm"
+
 # Oh-My-Zsh settings
 omz_install_script_url: "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 omz_theme_name: "kali-like-alt"

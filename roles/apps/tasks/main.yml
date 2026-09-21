@@ -110,6 +110,23 @@
     state: present
   tags: [software, vscode]
 
+# --- GitHub CLI Installation ---
+- name: GitHub CLI | Add GitHub CLI repository
+  ansible.builtin.yum_repository:
+    name: gh-cli
+    description: packages for the GitHub CLI
+    baseurl: "{{ gh_repo_url }}"
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: "{{ gh_gpg_key }}"
+  tags: [software, gh]
+
+- name: GitHub CLI | Install GitHub CLI
+  ansible.builtin.dnf:
+    name: gh
+    state: present
+  tags: [software, gh]
+
 # --- ProtonVPN Installation ---
 #- name: ProtonVPN | Install ProtonVPN repository
 #  ansible.builtin.dnf:
