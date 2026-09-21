@@ -172,10 +172,6 @@ zsh_aliases: |
   alias nvidia-run="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0"
   alias full-update="flatpak update -y; sudo npm update -g; sudo dnf upgrade --refresh -y"
 
-# Personalization
-user_profile_picture: "profile_1.jpg"
-system_wallpaper: "wallpaper_1.jpg"
-
 # PTYxis Settings
 ptyxis_restore_window_size: "false"
 ptyxis_default_columns: 120

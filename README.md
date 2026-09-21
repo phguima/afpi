@@ -22,7 +22,7 @@ The project is organized to isolate responsibilities, ensuring idempotency and e
 *   **`hardware`**: Driver detection and installation (Signed NVIDIA for Secure Boot, Intel, AMD), multimedia codecs, and ASUS ROG support.
 *   **`desktop`**: 
     *   **Universal Cedilla (ç) Fix**: Uses a `~/.XCompose` mapping (System) plus Flatpak overrides. Browsers, Bitwarden and Antigravity run on native Wayland with no extra fix; Zoom is the exception and always runs on XWayland (it hardcodes xcb), where the cedilla also works.
-    *   **Visual**: Unified management of wallpapers (Desktop/SDDM), profile pictures, and terminal profiles (Konsole/PTYxis).
+    *   **Terminal**: Konsole and PTYxis profile management.
 
 *   **`apps`**: Complete suite via DNF and Flatpak, featuring GPU automation for Steam, **VirtualBox group management (vboxusers/vboxsf)**, and productivity tools (Brave, VS Code).
 *   **`ai_tools`**: Integration of the AI ecosystem (Gemini CLI and extensions) and specialized Python libraries via `pipx`.
@@ -36,7 +36,7 @@ AFPI features a comprehensive tagging system that allows you to run specific par
 | **Maintenance** | `update`, `cleanup` | System upgrades, DNF optimization, and kernel cleanup. |
 | **Hardware** | `nvidia`, `drivers`, `power`, `asus` | GPU drivers, power management, and ASUS-specific tools. |
 | **Shell** | `shell`, `zsh`, `omz`, `aliases` | ZSH installation, Oh-My-Zsh theme, and custom aliases. |
-| **Desktop** | `desktop`, `visual`, `fonts`, `cedilla` | UI themes, wallpapers, fonts, and the universal cedilla fix. |
+| **Desktop** | `desktop`, `fonts`, `cedilla` | UI themes, fonts, and the universal cedilla fix. |
 | **Software** | `apps`, `software`, `dnf`, `flatpak` | Application installation via DNF or Flatpak. |
 | **AI** | `ai`, `gemini`, `extensions`, `python` | Gemini CLI, extensions, and AI-related Python libraries. |
 
@@ -49,7 +49,6 @@ AFPI uses **Ansible Vault** to protect sensitive information. Since the provided
 | :--- | :--- | :--- |
 | `api_keys` | Block of environment exports for your shell | `export SERVICE_API_KEY="your_value_here"` |
 | `mok_password` | Password for NVIDIA MOK enrollment | Used to sign drivers for Secure Boot |
-| `user_profile_picture_base64` | Base64 string of your profile photo | Optional |
 
 ## 🚀 Getting Started
 
