@@ -59,12 +59,12 @@ nvidia_vulkan_packages:
 # Packages and Apps
 dnf_packages_common:
   - argyllcms
-  - btrfs-assistant
+#  - btrfs-assistant
   - chkrootkit
   - chromium
   - clamav
   - clamav-update
-  - darktable
+#  - darktable
   - fastfetch
   - htop
   - hwinfo
@@ -76,10 +76,10 @@ dnf_packages_common:
   - python3-pip
   - p7zip
   - p7zip-plugins
-  - rawtherapee
-  - rkhunter 
+#  - rawtherapee
+  - rkhunter
 #  - solaar
-  - sqlitebrowser
+#  - sqlitebrowser
   - steam
   - testdisk
   - tmux
@@ -108,7 +108,7 @@ flatpak_apps_common:
   - com.slack.Slack
   - com.spotify.Client
   - net.displaycal.DisplayCAL
-  - org.ferdium.Ferdium
+#  - org.ferdium.Ferdium
   - org.zotero.Zotero
   - us.zoom.Zoom
 
