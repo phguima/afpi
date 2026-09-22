@@ -96,7 +96,7 @@
     block: "{{ zsh_aliases }}"
     owner: "{{ item.name }}"
   loop: "{{ zsh_users }}"
-  tags: [shell, omz]
+  tags: [shell, omz, aliases]
 
 # --- Antigravity CLI ---
 - name: Antigravity | Install Antigravity CLI for users

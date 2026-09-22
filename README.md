@@ -2,24 +2,26 @@
 
 [![Project Status: Active](https://img.shields.io/badge/Project%20Status-Active-brightgreen.svg)](#-project-status)
 
-AFPI is a modular and intelligent system for Fedora Workstation post-installation (Validated on Fedora 41-43). It uses an architecture based on **Roles** and **Dynamic Templates**, allowing your desktop customization and hardware optimizations to be applied consistently, making your workstation deployment fully automated and "hardware-aware".
+AFPI is a modular and intelligent system for Fedora Workstation post-installation (Validated on Fedora 41-43). It uses an architecture based on **Roles** and environment-aware variables (Jinja2), allowing your desktop customization and hardware optimizations to be applied consistently, making your workstation deployment fully automated and "hardware-aware".
 
 > [!WARNING]
 > **Disclaimer:** This project is tailored specifically for my personal environment, preferences, and hardware configuration. If you choose to use it, you must thoroughly review all roles, configurations, and variables, and customize them to fit your own specific requirements and hardware setup. Use it at your own risk.
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.4.0
-*   **Last Update:** May 24, 2026
-*   **Latest Improvement:** Added system security audit and diagnostics tools (chkrootkit, lynis, rkhunter, unhide, htop) and cleaned up deprecated gemini-cli aliases.
+*   **Current Version:** 2.5.0
+*   **Last Update:** September 21, 2026
+*   **Latest Improvement:** Native Wayland for browsers, Bitwarden and Antigravity (X11 workarounds removed), the cedilla fixed at the source in `~/.XCompose`, GitHub CLI from the official repository, and cleanup of unused options (wallpaper, profile picture, ProtonVPN, Burp Suite, VLC).
 *   **Stability:** Production-ready for Fedora 41, 42, and 43.
 
 ## 🏗️ Architecture and Roles
 
 The project is organized to isolate responsibilities, ensuring idempotency and ease of maintenance:
 
-*   **`common`**: System optimizations (DNF, RPM Fusion), kernel cleanup, and **Zero-Config ZSH** setup (Oh-My-Zsh with Kali-like theme and self-managed plugins).
-*   **`hardware`**: Driver detection and installation (Signed NVIDIA for Secure Boot, Intel, AMD), multimedia codecs, and ASUS ROG support.
+*   **`update`**: DNF plugins and optimization, RPM Fusion repositories, and a full system upgrade.
+*   **`nvidia`**: GPU detection and Secure Boot-ready driver installation (MOK key, signed akmods build, initramfs).
+*   **`hardware`**: Post-driver GPU setup (NVIDIA Vulkan, VA-API/NVENC and power management; Intel and AMD acceleration), multimedia codecs, and ASUS ROG support.
+*   **`common`**: Hostname, Flathub, kernel cleanup, the Antigravity CLI, and **Zero-Config ZSH** setup (Oh-My-Zsh with Kali-like theme and self-managed plugins).
 *   **`desktop`**: 
     *   **Universal Cedilla (ç) Fix**: Uses a `~/.XCompose` mapping (System) plus Flatpak overrides. Browsers, Bitwarden and Antigravity run on native Wayland with no extra fix; Zoom is the exception and always runs on XWayland (it hardcodes xcb), where the cedilla also works.
     *   **Terminal**: Konsole and PTYxis profile management.
@@ -36,7 +38,7 @@ AFPI features a comprehensive tagging system that allows you to run specific par
 | **Maintenance** | `update`, `cleanup` | System upgrades, DNF optimization, and kernel cleanup. |
 | **Hardware** | `nvidia`, `drivers`, `power`, `asus` | GPU drivers, power management, and ASUS-specific tools. |
 | **Shell** | `shell`, `zsh`, `omz`, `aliases` | ZSH installation, Oh-My-Zsh theme, and custom aliases. |
-| **Desktop** | `desktop`, `fonts`, `cedilla` | UI themes, fonts, and the universal cedilla fix. |
+| **Desktop** | `desktop`, `fonts`, `cedilla` | Terminal profiles, fonts, and the universal cedilla fix. |
 | **Software** | `apps`, `software`, `dnf`, `flatpak` | Application installation via DNF or Flatpak. |
 | **AI** | `ai`, `gemini`, `extensions`, `python` | Gemini CLI, extensions, and AI-related Python libraries. |
 
