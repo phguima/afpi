@@ -11,7 +11,7 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 *   **Current Version:** 2.4.0
 *   **Last Update:** May 24, 2026
-*   **Latest Improvement:** Added system security audit and diagnostics tools (chkrootkit, lynis, rkhunter, unhide, htop, Burp Suite Community) and cleaned up deprecated gemini-cli aliases.
+*   **Latest Improvement:** Added system security audit and diagnostics tools (chkrootkit, lynis, rkhunter, unhide, htop) and cleaned up deprecated gemini-cli aliases.
 *   **Stability:** Production-ready for Fedora 41, 42, and 43.
 
 ## 🏗️ Architecture and Roles
@@ -93,9 +93,6 @@ AFPI doesn't just run blindly. The `env_setup.yml` core task dynamically discove
 
 ### Zero-Config Shell
 ZSH configuration has been simplified. The `kali-like-alt` theme manages its own dependencies (syntax highlighting and autosuggestions), reducing playbook complexity and execution time.
-
-### Automated Resilience
-The system handles common installation failures automatically, such as external repository synchronization (ProtonVPN). It implements a **Double-Guard** logic (repository validation + intelligent retries) to mitigate mirror instabilities.
 
 ### Robust NVIDIA & Secure Boot Automation
 The `nvidia` role implements an advanced MOK (Machine Owner Key) management system entirely via Ansible:
