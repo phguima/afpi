@@ -27,7 +27,7 @@ The project is organized to isolate responsibilities, ensuring idempotency and e
     *   **Terminal**: Konsole and PTYxis profile management.
 
 *   **`apps`**: Complete suite via DNF and Flatpak, featuring GPU automation for Steam, **VirtualBox group management (vboxusers/vboxsf)**, and productivity tools (Brave, VS Code, GitHub CLI).
-*   **`ai_tools`**: Integration of the AI ecosystem (Gemini CLI and extensions) and specialized Python libraries via `pipx`.
+*   **`ai_tools`**: Integration of the AI ecosystem (Claude Code via the official native installer, Gemini CLI and extensions) and specialized Python libraries via `pipx`.
 
 ## 🏷️ Granular Control (Tags)
 
@@ -40,7 +40,7 @@ AFPI features a comprehensive tagging system that allows you to run specific par
 | **Shell** | `shell`, `zsh`, `omz`, `aliases` | ZSH installation, Oh-My-Zsh theme, and custom aliases. |
 | **Desktop** | `desktop`, `fonts`, `cedilla` | Terminal profiles, fonts, and the universal cedilla fix. |
 | **Software** | `apps`, `software`, `dnf`, `flatpak` | Application installation via DNF or Flatpak. |
-| **AI** | `ai`, `gemini`, `extensions`, `python` | Gemini CLI, extensions, and AI-related Python libraries. |
+| **AI** | `ai`, `claude`, `gemini`, `extensions`, `python` | Claude Code, Gemini CLI, extensions, and AI-related Python libraries. |
 
 ## 🔐 Secrets Management (Ansible Vault)
 

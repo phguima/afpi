@@ -32,6 +32,15 @@
 #  when: user_name != 'root'
 #  tags: [ai, gemini, extensions]
 
+# --- Claude Code ---
+- name: Software | Install Claude Code (native installer) for primary user
+  ansible.builtin.shell:
+    cmd: "curl -fsSL {{ claude_install_script_url }} | bash"
+    creates: "{{ user_home }}/.local/bin/claude"
+  become_user: "{{ user_name }}"
+  when: user_name != 'root'
+  tags: [ai, claude]
+
 # --- Python AI Libraries ---
 - name: Python | Ensure pipx path is in user shell configuration
   ansible.builtin.shell:

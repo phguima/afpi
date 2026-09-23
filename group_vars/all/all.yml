@@ -158,6 +158,9 @@ omz_plugins:
 # Antigravity CLI settings
 antigravity_install_script_url: "https://antigravity.google/cli/install.sh"
 
+# Claude Code settings
+claude_install_script_url: "https://claude.ai/install.sh"
+
 # Zsh Aliases
 zsh_aliases: |
   alias zshconfig="nano ~/.zshrc"
