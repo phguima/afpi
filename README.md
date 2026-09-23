@@ -9,9 +9,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.5.0
-*   **Last Update:** September 21, 2026
-*   **Latest Improvement:** Native Wayland for browsers, Bitwarden and Antigravity (X11 workarounds removed), the cedilla fixed at the source in `~/.XCompose`, GitHub CLI from the official repository, and cleanup of unused options (wallpaper, profile picture, ProtonVPN, Burp Suite, VLC).
+*   **Current Version:** 2.6.0
+*   **Last Update:** September 23, 2026
+*   **Latest Improvement:** Claude Code installed via the official native installer in the `ai_tools` role (new `claude` tag).
 *   **Stability:** Production-ready for Fedora 41, 42, 43, and 44.
 
 ## 🏗️ Architecture and Roles
