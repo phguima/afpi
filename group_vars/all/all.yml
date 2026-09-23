@@ -4,7 +4,7 @@ dnf_max_parallel_downloads: 15
 dnf_fastestmirror: "True"
 
 # System Settings
-system_hostname: "shadowman"
+system_hostname: "noir"
 
 # GRUB Settings
 grub_timeout: 5
