@@ -66,6 +66,7 @@ dnf_packages_common:
   - clamav-update
 #  - darktable
   - discord
+  - drawy
   - fastfetch
   - htop
   - hwinfo
