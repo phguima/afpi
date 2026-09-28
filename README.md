@@ -85,6 +85,13 @@ Some laptops (especially those with hybrid graphics or specific ASUS/NVIDIA comb
     ```
 3.  If the playbook finishes successfully with these skips, the conflict is likely in the NVIDIA Deep Power Management settings or the `supergfxd` service.
 
+## 🎬 Manual Step: Widevine DRM in Brave
+
+AFPI installs both `brave-browser` and `brave-origin`, but intentionally leaves Widevine untouched: enabling DRM is a personal choice. Without it, DRM-protected video (streaming services, course platforms) will not play. To enable it in each variant:
+
+1.  Open `brave://settings/extensions` and turn on **Widevine**, then restart the browser.
+2.  Open `brave://components` and check that **Widevine Content Decryption Module** shows a version (if it shows `0.0.0.0`, click **Check for update**).
+
 ## 🛠️ AFPI Differentiators
 
 ### Intelligent Environment Discovery
