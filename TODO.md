@@ -33,13 +33,19 @@ Legenda: 🔴 funciona errado hoje · 🟠 robustez · 🟡 cosmético / polimen
       O aviso de reboot do driver ficou separado do de MOK (não mostra mais a senha/MOK sem SB).
       Falta: VM com Secure Boot (enroll real no MokManager + `nvidia` carregando — exige GPU NVIDIA
       ou passthrough; sem isso, conferir só geração/enroll da chave).
-- [ ] 🟠 **Reboot gate** no fim do role `update` — depois do upgrade, `dnf needs-restarting -r`
+- [x] 🟠 **Reboot gate** no fim do role `update` — depois do upgrade, `dnf needs-restarting -r`
       (`changed_when: false`, `check_mode: false`, `failed_when: rc not in [0, 1]`); rc 1 → mensagem
       "reinicie e rode o mesmo comando de novo" + `meta: end_host`. Motivo: o akmod da NVIDIA
       (`akmods --kernel $(uname -r)`) e o do VirtualBox compilam para o kernel em execução, e a
       limpeza de kernels não remove o que está rodando. No Fedora o comando vem do **`dnf5-plugins`**
       (garantir instalado; `dnf-plugins-core` é o dnf4). Verificado no Fedora 44: existe, `-r` é
       aceito por compatibilidade, rc 0 quando não precisa reiniciar.
+      Validado (2026-10-01) em container `fedora:44` com o role `update` real (repos + upgrade):
+      `needs-restarting` real → rc 1 no container (libs atualizadas depois do boot do host) → para
+      com o aviso, sem rodar o resto nem os `post_tasks`; 2ª execução `changed=0`. Com wrapper de
+      `dnf` forçando o rc: 0 → segue até o fim; 1 → para; 3 → falha no check; `--check` com rc 1 →
+      também para (o `--check` mostra que vai precisar de reboot). `dnf5-plugins` já vem na imagem
+      base, a instalação explícita é só garantia.
 
 ## 2. Assinatura de módulos e segredos
 
