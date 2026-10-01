@@ -16,6 +16,16 @@
   when: is_gnome
   tags: [software, dnf, gnome]
 
+# Secure Boot: VirtualBox (RPM Fusion) builds its modules with akmods, so the signing key must
+# exist BEFORE the package install (shared with the nvidia role; a no-op if it already ran).
+- name: VirtualBox | Prepare module signing key (Secure Boot)
+  ansible.builtin.import_role:
+    name: akmods_mok
+  when:
+    - is_secure_boot
+    - "'VirtualBox' in dnf_packages_common"
+  tags: [software, dnf, common, virtualbox, secureboot]
+
 - name: Software | Install DNF packages
   ansible.builtin.dnf:
     name: "{{ dnf_packages_common }}"

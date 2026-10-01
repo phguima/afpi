@@ -27,33 +27,11 @@
         name: "{{ nvidia_prerequisite_packages }}"
         state: present
 
-    # Secure Boot: the akmods key pair must exist BEFORE the driver install, because akmods signs
-    # the modules it builds with it. The enrollment itself is confirmed by hand in MokManager on reboot.
+    # Secure Boot: the signing key must exist BEFORE the driver install (shared with VirtualBox)
     - name: NVIDIA | Prepare module signing key (Secure Boot)
+      ansible.builtin.import_role:
+        name: akmods_mok
       when: is_secure_boot
-      block:
-        # No --force: that creates a brand-new pair on every run and repoints the symlinks to it,
-        # leaving the already-enrolled key unused.
-        - name: NVIDIA | Generate akmods signing key pair
-          ansible.builtin.command:
-            cmd: kmodgenca -a
-            creates: /etc/pki/akmods/certs/public_key.der
-
-        # "is already enrolled" / "is already in the enrollment request" -> nothing to do
-        - name: NVIDIA | Check MOK enrollment state
-          ansible.builtin.command: mokutil --test-key /etc/pki/akmods/certs/public_key.der
-          register: nvidia_mok_state
-          changed_when: false
-          failed_when: false
-          check_mode: false
-
-        - name: NVIDIA | Request MOK enrollment
-          ansible.builtin.command:
-            cmd: mokutil --import /etc/pki/akmods/certs/public_key.der
-            stdin: "{{ mok_password | default('fedora-afpi') }}\n{{ mok_password | default('fedora-afpi') }}"
-          when: "'already' not in nvidia_mok_state.stdout"
-          register: nvidia_mok_import
-          no_log: true
 
     - name: NVIDIA | Install NVIDIA drivers and related packages
       ansible.builtin.dnf:
@@ -88,17 +66,7 @@
           - "=================================================="
           - "A system REBOOT is REQUIRED to load the NVIDIA driver."
           - "=================================================="
-
-    - name: NVIDIA | Remind to enroll the MOK key on next boot
-      ansible.builtin.debug:
-        msg:
-          - "=================================================================="
-          - "Secure Boot: akmods signing key queued for enrollment."
-          - "REBOOT, choose 'Enroll MOK' in the blue MokManager screen and"
-          - "type the MOK password. The NVIDIA modules load after that."
-          - "=================================================================="
-      when: nvidia_mok_import is changed
-  when: 
+  when:
     - is_nvidia_present
     - nvidia_installed_check.rc != 0
   tags: [nvidia]

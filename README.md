@@ -19,7 +19,8 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 The project is organized to isolate responsibilities, ensuring idempotency and ease of maintenance:
 
 *   **`update`**: DNF plugins and optimization, RPM Fusion repositories, and a full system upgrade.
-*   **`nvidia`**: GPU detection and Secure Boot-ready driver installation (MOK key, signed akmods build, initramfs).
+*   **`nvidia`**: GPU detection and Secure Boot-ready driver installation (signed akmods build, initramfs).
+*   **`akmods_mok`**: Secure Boot signing key for akmods-built modules (NVIDIA, VirtualBox): generated once, enrolled via `mokutil` only when not already enrolled or pending. Imported by `nvidia` and `apps` before their akmod packages are installed.
 *   **`hardware`**: Post-driver GPU setup (NVIDIA Vulkan, VA-API/NVENC and power management; Intel and AMD acceleration), multimedia codecs, and ASUS ROG support.
 *   **`common`**: Hostname, Flathub, kernel cleanup, GRUB tuning (timeout, resolution, regenerated automatically when changed), the Antigravity CLI, and **Zero-Config ZSH** setup (Oh-My-Zsh with Kali-like theme and self-managed plugins).
 *   **`desktop`**: 
@@ -50,7 +51,6 @@ AFPI uses **Ansible Vault** to protect sensitive information. Since the provided
 | Variable | Description | Example / Usage |
 | :--- | :--- | :--- |
 | `api_keys` | Block of environment exports for your shell | `export SERVICE_API_KEY="your_value_here"` |
-| `mok_password` | Password for NVIDIA MOK enrollment | Used to sign drivers for Secure Boot |
 
 ## 🚀 Getting Started
 
@@ -107,7 +107,7 @@ ZSH configuration has been simplified. The `kali-like-alt` theme manages its own
 The `nvidia` role implements an advanced MOK (Machine Owner Key) management system entirely via Ansible:
 *   **Intelligent Detection:** Detects existing keys, pending enrollments, and kernel status to avoid redundant operations.
 *   **Integrated Signing:** Automatically triggers `akmods` and `dracut` to ensure modules are signed and included in the initramfs immediately.
-*   **Secure Pipe:** Uses high-reliability password injection for `mokutil` via Vault secrets.
+*   **Secure Pipe:** Passes `mok_password` (`group_vars/all/all.yml`) to `mokutil` via stdin, never logged.
 
 ### Universal Cedilla (ç) Fix
 Uses a `~/.XCompose` mapping (System) plus Flatpak overrides. Browsers, Bitwarden and Antigravity run on native Wayland with no extra fix; Zoom is the exception and always runs on XWayland (it hardcodes xcb), where the cedilla also works.

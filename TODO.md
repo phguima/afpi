@@ -49,14 +49,27 @@ Legenda: 🔴 funciona errado hoje · 🟠 robustez · 🟡 cosmético / polimen
 
 ## 2. Assinatura de módulos e segredos
 
-- [ ] 🔴 **Enroll da chave akmods compartilhado** — hoje só o role `nvidia` gera/registra a chave;
+- [x] 🔴 **Enroll da chave akmods compartilhado** — hoje só o role `nvidia` gera/registra a chave;
       numa máquina sem NVIDIA e com Secure Boot ligado, o `akmod-VirtualBox` (RPM Fusion) fica sem
       assinatura válida e o `vboxdrv` não carrega. Mover a geração/enroll (item MOK acima) para um
       task reutilizável (ex.: `tasks/akmods_mok.yml`) chamado por `nvidia` e pela parte de
       VirtualBox do `apps`, com `when: is_secure_boot`.
-- [ ] 🟠 **`mok_password` explícito** — hoje é `default('fedora-afpi')` escondido no task. Declarar
+      Feito como role `akmods_mok` (2026-10-01), importado (`import_role`) pelo `nvidia` (antes do
+      driver) e pelo `apps` (antes do "Install DNF packages", só se `VirtualBox` está em
+      `dnf_packages_common`; tags `software, dnf, common, virtualbox, secureboot`). O role também
+      instala `akmods`/`mokutil`/`openssl`. Validado em container `fedora:44` com os roles reais
+      (`mokutil` e `/sys/firmware` falsos; driver NVIDIA trocado por um pacote leve): só VirtualBox
+      numa máquina nova → 1 chave + 1 import + aviso; NVIDIA → depois VirtualBox → a 2ª importação
+      não faz nada (mesma chave, sem import); chave registrada → nada; SB=0 → tudo pulado nos dois
+      caminhos; `--syntax-check` / `--list-tasks` do `site.yml` ok.
+- [x] 🟠 **`mok_password` explícito** — hoje é `default('fedora-afpi')` escondido no task. Declarar
       em `group_vars/all/all.yml` (comentário: MokManager usa teclado US, só letras/dígitos/`-`) +
       `assert` quando `is_secure_boot`. O vault continua só com `api_keys`.
+      Feito (2026-10-01): `mok_password: "fedora-afpi"` (o mesmo default de antes) em `all.yml` +
+      `assert` no `akmods_mok` (validado: senha vazia → falha com a mensagem). README atualizado.
+      ⚠️ Os arquivos de `group_vars/all/` carregam em ordem alfabética: se o `secrets.yml` (vault)
+      ainda tiver `mok_password`, **ele vence** o `all.yml`. Para concluir a mudança, remover a
+      variável do vault (`ansible-vault edit group_vars/all/secrets.yml`), que fica só com `api_keys`.
 
 ## 3. GRUB e checagens
 
