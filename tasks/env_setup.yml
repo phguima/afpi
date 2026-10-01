@@ -1,6 +1,17 @@
 ---
 # Environment discovery and setup for all roles
 
+- name: Env Setup | Ensure target is Fedora 41 or newer
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] == 'Fedora'
+      - ansible_facts['distribution_major_version'] | int >= 41
+    fail_msg: >-
+      AFPI targets Fedora 41 or newer; detected
+      {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}.
+    quiet: true
+  tags: [always]
+
 - name: Env Setup | Get primary user data
   ansible.builtin.getent:
     database: passwd

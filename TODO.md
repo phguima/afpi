@@ -73,11 +73,18 @@ Legenda: 🔴 funciona errado hoje · 🟠 robustez · 🟡 cosmético / polimen
 
 ## 3. GRUB e checagens
 
-- [ ] 🟠 **Handler `Regenerate GRUB`** (`site.yml`) — trocar `-o /etc/grub2-efi.cfg` por
+- [x] 🟠 **Handler `Regenerate GRUB`** (`site.yml`) — trocar `-o /etc/grub2-efi.cfg` por
       `-o /boot/grub2/grub.cfg` (o real em UEFI e BIOS; o `/etc/grub2-efi.cfg` é só symlink para ele
       — confirmado no Fedora 44 — e não existe em instalação BIOS).
-- [ ] 🟡 **Assert de distro** (`tasks/env_setup.yml`, tag `always`) — `distribution == 'Fedora'` e
+      Validado (2026-10-01) em container `fedora:44` com o `site.yml` real (`--tags grub`) e
+      `grub2-mkconfig` falso: 1ª execução → handler dispara 1× com `-o /boot/grub2/grub.cfg`;
+      2ª → `changed=0`, sem chamada. No container, sem o pacote do GRUB EFI, `/etc/grub2-efi.cfg` nem
+      existe: com o caminho antigo, o `grub2-mkconfig` criaria um arquivo comum que o boot não lê.
+- [x] 🟡 **Assert de distro** (`tasks/env_setup.yml`, tag `always`) — `distribution == 'Fedora'` e
       major mínimo (ex.: `>= 43`), para falhar cedo se rodar no lugar errado.
+      Feito com mínimo **41** (o README diz "Validated on Fedora 41-44"). Validado em containers:
+      `fedora:44` e `fedora:41` passam; `fedora:40` e `almalinux:10` falham com
+      "AFPI targets Fedora 41 or newer; detected …".
 
 ## 4. Idempotência e `--check`
 
