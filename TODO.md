@@ -105,16 +105,31 @@ Legenda: 🔴 funciona errado hoje · 🟠 robustez · 🟡 cosmético / polimen
 Testes **nunca** rodam no host (`noir`), nem só leitura / `--check`: só em container (podman) ou na VM.
 
 - [ ] Container `fedora:44` (duas execuções, para idempotência) para tudo que não depende de
-      hardware: reboot gate (forçar rc 0/1/3), assert de distro, repos de debug, Ptyxis (sessão D-Bus
-      do usuário + sudo), `--check`.
-- [ ] VM com Secure Boot: geração da chave só uma vez, `mokutil --test-key` pulando
-      na 2ª execução, enroll no MokManager, `vboxdrv` e `nvidia` carregando depois do reboot.
+      hardware. Já feito: `is_secure_boot`, MOK/`akmods_mok`, reboot gate, handler do GRUB, assert de
+      distro (ver cada item). Falta: repos de debug, Ptyxis (sessão D-Bus do usuário + sudo) e o
+      `--check` geral (seção 4). Receitas de teste no `CLAUDE.md`.
+- [ ] VM com Secure Boot (o usuário providencia; a máquina `noir` está com SB desligado):
+      - `mokutil --sb-state` × `od -An -tu1 -j4 -N1 /sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c`
+        (`enabled` ↔ `1`) e o fact `is_secure_boot`;
+      - 1ª execução para no reboot gate depois do upgrade; reiniciar e rodar de novo;
+      - chave akmods gerada uma vez só, enroll no MokManager (senha `mok_password`),
+        `mokutil --test-key /etc/pki/akmods/certs/public_key.der` → "already enrolled", e a execução
+        seguinte sem novo `--import`;
+      - `vboxdrv` carregando (`lsmod | grep vbox`); `nvidia` só com GPU NVIDIA na VM (passthrough).
+
+## 6. Documentação
+
+- [ ] README: explicar o reboot gate. A 1ª execução numa máquina recém-atualizada para depois do
+      upgrade: reiniciar e rodar o mesmo comando de novo. Revisar também o fluxo em 5 passos com
+      tags da seção "NVIDIA Users", que o gate simplifica (`update` → reboot → resto).
 
 ---
 
 ## Ordem sugerida
 
-1. `is_secure_boot` → MOK idempotente → reboot gate (seção 1)
-2. Enroll akmods compartilhado → `mok_password` (seção 2)
-3. Handler do GRUB → assert de distro (seção 3)
-4. Polimento de idempotência / `--check` (seção 4)
+1. ~~`is_secure_boot` → MOK idempotente → reboot gate (seção 1)~~ — feito
+2. ~~Enroll akmods compartilhado → `mok_password` (seção 2)~~ — feito
+3. ~~Handler do GRUB → assert de distro (seção 3)~~ — feito
+4. Polimento de idempotência / `--check` (seção 4) — **próximo** (~30–45 min, a maior parte em testes)
+5. README do reboot gate (seção 6)
+6. Validação na VM com Secure Boot (seção 5), quando o usuário tiver a VM
