@@ -11,10 +11,13 @@ Legenda: 🔴 funciona errado hoje · 🟠 robustez · 🟡 cosmético / polimen
 
 ## 1. Núcleo: Secure Boot, MOK e reboot gate
 
-- [ ] 🟠 **Fact `is_secure_boot`** (`tasks/env_setup.yml`) — ler o 5º byte da efivar
+- [x] 🟠 **Fact `is_secure_boot`** (`tasks/env_setup.yml`) — ler o 5º byte da efivar
       `SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c` com `od -An -tu1 -j4 -N1` (funciona antes do
       `mokutil` estar instalado; BIOS legado → `false`), `check_mode: false`. Base dos itens abaixo.
-- [ ] 🔴 **MOK idempotente no role `nvidia`** — hoje `kmodgenca --force -a` gera **chave nova a cada
+      Validado (2026-10-01) em container `fedora:44`: sem efivars (→ `false`) e com `/sys/firmware`
+      falso valendo `1`/`0` (→ `true`/`false`).
+      Falta só a conferência na VM com Secure Boot (`mokutil --sb-state` × fact).
+- [x] 🔴 **MOK idempotente no role `nvidia`** — hoje `kmodgenca --force -a` gera **chave nova a cada
       execução** e `mokutil --import` reenfileira sempre (se a chave antiga já estava registrada, os
       módulos passam a ser assinados com uma não registrada). Trocar por:
       - `kmodgenca -a` com `creates: /etc/pki/akmods/certs/public_key.der` (sem `--force`);
@@ -22,6 +25,14 @@ Legenda: 🔴 funciona errado hoje · 🟠 robustez · 🟡 cosmético / polimen
       - `mokutil --import` com `stdin:` (em vez de `echo -e`) e `no_log: true`;
       - aviso "Enroll MOK no próximo boot" só quando o import mudou algo;
       - bloco todo sob `when: is_secure_boot`.
+      Validado (2026-10-01) em container `fedora:44` com o bloco extraído do role, `kmodgenca` real
+      (`akmods` 0.6.2), `mokutil` falso e `/sys/firmware` falso: SB=1 → 1ª execução gera 1 chave,
+      1 `--import` (senha chega via stdin) e mostra o aviso; 2ª (na fila) e 3ª (registrada) mantêm a
+      mesma chave/symlink, sem import nem aviso; `--check` não grava nada; `-vvv` não vaza a senha;
+      SB=0 → tudo pulado, nenhuma chave criada. `--syntax-check` do `site.yml` ok.
+      O aviso de reboot do driver ficou separado do de MOK (não mostra mais a senha/MOK sem SB).
+      Falta: VM com Secure Boot (enroll real no MokManager + `nvidia` carregando — exige GPU NVIDIA
+      ou passthrough; sem isso, conferir só geração/enroll da chave).
 - [ ] 🟠 **Reboot gate** no fim do role `update` — depois do upgrade, `dnf needs-restarting -r`
       (`changed_when: false`, `check_mode: false`, `failed_when: rc not in [0, 1]`); rc 1 → mensagem
       "reinicie e rode o mesmo comando de novo" + `meta: end_host`. Motivo: o akmod da NVIDIA
@@ -65,10 +76,12 @@ Legenda: 🔴 funciona errado hoje · 🟠 robustez · 🟡 cosmético / polimen
 
 ## 5. Validação
 
+Testes **nunca** rodam no host (`noir`), nem só leitura / `--check`: só em container (podman) ou na VM.
+
 - [ ] Container `fedora:44` (duas execuções, para idempotência) para tudo que não depende de
       hardware: reboot gate (forçar rc 0/1/3), assert de distro, repos de debug, Ptyxis (sessão D-Bus
       do usuário + sudo), `--check`.
-- [ ] Máquina real / VM com Secure Boot: geração da chave só uma vez, `mokutil --test-key` pulando
+- [ ] VM com Secure Boot: geração da chave só uma vez, `mokutil --test-key` pulando
       na 2ª execução, enroll no MokManager, `vboxdrv` e `nvidia` carregando depois do reboot.
 
 ---
