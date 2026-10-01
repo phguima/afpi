@@ -67,9 +67,9 @@ Legenda: 🔴 funciona errado hoje · 🟠 robustez · 🟡 cosmético / polimen
       `assert` quando `is_secure_boot`. O vault continua só com `api_keys`.
       Feito (2026-10-01): `mok_password: "fedora-afpi"` (o mesmo default de antes) em `all.yml` +
       `assert` no `akmods_mok` (validado: senha vazia → falha com a mensagem). README atualizado.
-      ⚠️ Os arquivos de `group_vars/all/` carregam em ordem alfabética: se o `secrets.yml` (vault)
-      ainda tiver `mok_password`, **ele vence** o `all.yml`. Para concluir a mudança, remover a
-      variável do vault (`ansible-vault edit group_vars/all/secrets.yml`), que fica só com `api_keys`.
+      `mok_password` removido do vault (2026-10-01, feito pelo usuário): o `secrets.yml` fica só com
+      `api_keys`. (Os arquivos de `group_vars/all/` carregam em ordem alfabética, então uma cópia no
+      vault venceria o `all.yml`.)
 
 ## 3. GRUB e checagens
 
