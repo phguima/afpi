@@ -18,7 +18,7 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 The project is organized to isolate responsibilities, ensuring idempotency and ease of maintenance:
 
-*   **`update`**: DNF plugins and optimization, RPM Fusion repositories, and a full system upgrade.
+*   **`update`**: DNF plugins and optimization, RPM Fusion repositories, a full system upgrade, and a reboot gate (stops the run when the upgrade needs a reboot).
 *   **`nvidia`**: GPU detection and Secure Boot-ready driver installation (signed akmods build, initramfs).
 *   **`akmods_mok`**: Secure Boot signing key for akmods-built modules (NVIDIA, VirtualBox): generated once, enrolled via `mokutil` only when not already enrolled or pending. Imported by `nvidia` and `apps` before their akmod packages are installed.
 *   **`hardware`**: Post-driver GPU setup (NVIDIA Vulkan, VA-API/NVENC and power management; Intel and AMD acceleration), multimedia codecs, and ASUS ROG support.
@@ -67,12 +67,19 @@ ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass
 ```
 
 > [!IMPORTANT]
-> **NVIDIA Users:** To ensure compatibility of proprietary drivers with the latest kernel and Secure Boot signing, follow this specific 3-step workflow using tags:
-> 1. **Update System:** `ansible-playbook -i inventory.ini site.yml --tags update -K --ask-vault-pass`
-> 2. **Reboot** to load the new kernel.
-> 3. **Install NVIDIA Drivers:** `ansible-playbook -i inventory.ini site.yml --tags nvidia -K --ask-vault-pass`
-> 4. **Reboot** to enroll the MOK key (if Secure Boot is enabled).
-> 5. **Finish Setup:** `ansible-playbook -i inventory.ini site.yml --skip-tags update,nvidia -K --ask-vault-pass`
+> **Reboot gate:** right after the system upgrade, the `update` role checks `dnf needs-restarting -r`. If the upgrade requires a reboot (new kernel or core libraries), the playbook **stops there** with a message: reboot and run the **same command** again. The second run passes the gate and applies the rest of the setup. On a freshly installed machine the first run almost always stops at the gate.
+>
+> This keeps the akmod-built modules (NVIDIA driver, VirtualBox) compiled for the kernel that is actually running, and lets kernel cleanup remove the old one.
+
+### 3. NVIDIA and Secure Boot
+
+There is no special workflow anymore: keep running the same command and reboot whenever it asks.
+
+1. **Run** → stops at the reboot gate after the upgrade. **Reboot.**
+2. **Run** → installs the NVIDIA driver and, with Secure Boot on, queues the akmods signing key for enrollment. **Reboot**, choose **Enroll MOK** in the blue MokManager screen and type `mok_password` (`group_vars/all/all.yml`).
+3. **Run** once more → with the driver loaded (`nvidia-smi` works), the `hardware` role adds Vulkan and VA-API/NVENC support.
+
+Without Secure Boot, step 2 has no MokManager screen, but the reboot is still needed to load the driver. Machines without an NVIDIA GPU that install VirtualBox go through the same MOK enrollment in step 2.
 
 ## ⚠️ Troubleshooting: System Freezes
 
@@ -104,7 +111,7 @@ AFPI doesn't just run blindly. The `env_setup.yml` core task dynamically discove
 ZSH configuration has been simplified. The `kali-like-alt` theme manages its own dependencies (syntax highlighting and autosuggestions), reducing playbook complexity and execution time.
 
 ### Robust NVIDIA & Secure Boot Automation
-The `nvidia` role implements an advanced MOK (Machine Owner Key) management system entirely via Ansible:
+The `akmods_mok` role (used by `nvidia` and by the VirtualBox install in `apps`) implements MOK (Machine Owner Key) management entirely via Ansible:
 *   **Intelligent Detection:** Detects existing keys, pending enrollments, and kernel status to avoid redundant operations.
 *   **Integrated Signing:** Automatically triggers `akmods` and `dracut` to ensure modules are signed and included in the initramfs immediately.
 *   **Secure Pipe:** Passes `mok_password` (`group_vars/all/all.yml`) to `mokutil` via stdin, never logged.

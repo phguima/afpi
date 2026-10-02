@@ -119,28 +119,168 @@ Legenda: 🔴 funciona errado hoje · 🟠 robustez · 🟡 cosmético / polimen
       e numa máquina limpa o `--check` falha por desenho (ex.: o template do oh-my-zsh não existe
       porque a instalação foi só simulada).
 
-## 5. Validação
+## 5. Roteiro de testes nas VMs (VirtualBox, Fedora 44 GNOME e KDE + EFI + Secure Boot)
 
-Testes **nunca** rodam no host (`noir`), nem só leitura / `--check`: só em container (podman) ou na VM.
+Tudo o que container não cobre. Testes **nunca** no host (`noir`), nem só leitura / `--check`.
+Já validado em container (ver cada item acima): `is_secure_boot`, MOK/`akmods_mok`, reboot gate,
+handler do GRUB, assert de distro, repos de debug, Ptyxis.
 
-- [ ] Container `fedora:44` (duas execuções, para idempotência) para tudo que não depende de
-      hardware. Já feito: `is_secure_boot`, MOK/`akmods_mok`, reboot gate, handler do GRUB, assert de
-      distro (ver cada item). Falta: repos de debug, Ptyxis (sessão D-Bus do usuário + sudo) e o
-      `--check` geral (seção 4). Receitas de teste no `CLAUDE.md`.
-- [ ] VM com Secure Boot (o usuário providencia; a máquina `noir` está com SB desligado):
-      - `mokutil --sb-state` × `od -An -tu1 -j4 -N1 /sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c`
-        (`enabled` ↔ `1`) e o fact `is_secure_boot`;
-      - 1ª execução para no reboot gate depois do upgrade; reiniciar e rodar de novo;
-      - chave akmods gerada uma vez só, enroll no MokManager (senha `mok_password`),
-        `mokutil --test-key /etc/pki/akmods/certs/public_key.der` → "already enrolled", e a execução
-        seguinte sem novo `--import`;
-      - `vboxdrv` carregando (`lsmod | grep vbox`); `nvidia` só com GPU NVIDIA na VM (passthrough).
+Duas VMs iguais, uma com a edição **Workstation** (GNOME) e outra com a **KDE Plasma**. As etapas
+0–5 valem para as duas: marcar o item quando passar nas duas e, se falhar só numa, anotar qual
+(`GNOME:` / `KDE:`). As etapas 6 e 7 não dependem do desktop: basta uma VM (a GNOME).
+
+- As VMs não têm GPU NVIDIA: o role `nvidia` e as tasks NVIDIA do `hardware` são pulados. Quem
+  exercita o `akmods_mok` aqui é o VirtualBox do RPM Fusion (`akmod-VirtualBox`). O driver NVIDIA só
+  com GPU real (passthrough) ou no próprio `noir`, que está com Secure Boot desligado.
+- **Rodar o playbook de um terminal dentro da sessão gráfica**, não por SSH: o `env_setup` decide
+  GNOME/KDE pelo `XDG_CURRENT_DESKTOP` de quem chama, e sem ele todas as tasks de desktop são
+  puladas sem erro. Conferir antes: `echo $XDG_CURRENT_DESKTOP` → `GNOME` / `KDE`.
+
+### Etapa 0 — Criar as VMs (no host)
+Sintaxe conferida no VBoxManage 7.2.18 do `noir` (`Fedora_64`, `--firmware=efi`, `modifynvram`).
+Rodar uma vez para cada VM, trocando `VM` e `ISO` (o nome do ISO depende do download):
+```bash
+VM=fedora44-afpi-gnome; ISO="$HOME/Downloads/Fedora-Workstation-Live-44-x86_64.iso"
+# VM=fedora44-afpi-kde;  ISO="$HOME/Downloads/Fedora-KDE-Desktop-Live-44-x86_64.iso"
+DIR="$HOME/VirtualBox VMs/$VM"
+VBoxManage createvm --name=$VM --ostype=Fedora_64 --register
+VBoxManage modifyvm $VM --memory=8192 --cpus=4 --firmware=efi --graphicscontroller=vmsvga --vram=128 --nic1=nat
+VBoxManage createmedium disk --filename="$DIR/$VM.vdi" --size=81920
+VBoxManage storagectl $VM --name=SATA --add=sata --controller=IntelAhci
+VBoxManage storageattach $VM --storagectl=SATA --port=0 --device=0 --type=hdd --medium="$DIR/$VM.vdi"
+VBoxManage storageattach $VM --storagectl=SATA --port=1 --device=0 --type=dvddrive --medium="$ISO"
+# Secure Boot: chaves padrão (Microsoft + Oracle PK) e ativação
+VBoxManage modifynvram $VM inituefivarstore
+VBoxManage modifynvram $VM enrollmssignatures
+VBoxManage modifynvram $VM enrollorclpk
+VBoxManage modifynvram $VM secureboot --enable
+```
+(Pela interface: Sistema → Habilitar EFI + Habilitar Secure Boot → "Redefinir chaves para o padrão".)
+Disco de 80 GB: Steam, Flatpaks e os repos de terceiros ocupam bem mais que no AAPI. Com 8 GB cada,
+rodar as duas VMs ao mesmo tempo pede 16 GB livres no host; dá para fazer uma depois da outra.
+- [ ] Instalar cada edição com usuário administrador (`wheel`).
+- [ ] Em cada VM: `mokutil --sb-state` → `SecureBoot enabled`, e
+      `od -An -tu1 -j4 -N1 /sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c`
+      → `1`. Anotar `hostname` e `uname -r`.
+- [ ] Snapshot limpo de cada uma: `VBoxManage snapshot $VM take limpo` (VM desligada).
+
+### Etapa 1 — Bootstrap
+```bash
+git clone https://github.com/phguima/afpi && cd afpi && ./bootstrap.sh
+```
+Copiar o `secrets.yml` (vault) para `group_vars/all/` se o clone não o trouxer.
+- [ ] `bootstrap.sh` instala o Ansible e o `community.general` sem erro.
+- [ ] Os facts batem com a etapa 0 (só as tasks `always`, sem mudar nada):
+      `ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass --tags never -v 2>&1 | grep -E '"is_(secure_boot|gnome|kde)"'`
+      → `is_secure_boot: true` nas duas; `is_gnome: true` / `is_kde: false` na GNOME e o
+      contrário na KDE.
+- Não rodar `--check` agora: em máquina limpa ele falha por desenho (repos de terceiros e
+  oh-my-zsh só simulados, então tasks seguintes não acham o que precisam). Vai para a etapa 5.
+
+### Etapa 2 — 1ª execução: atualizar e reiniciar
+```bash
+ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass 2>&1 | tee run0.log
+```
+- [ ] Depois do upgrade o playbook **para** com "needs a REBOOT before continuing" (sem os outros
+      roles, sem o banner final). Se não pedir reboot, segue direto (etapa 3).
+- [ ] Reiniciar; `uname -r` → kernel mais recente.
+
+### Etapa 3 — 2ª execução: setup completo, chave akmods e VirtualBox
+```bash
+ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass 2>&1 | tee run1.log
+```
+- [ ] O `update` passa direto e termina com `failed=0` e o banner `AFPI DEPLOYMENT COMPLETED SUCCESSFULLY!`.
+- [ ] `MOK | Generate akmods signing key pair` e `MOK | Request enrollment` rodam uma vez e aparece
+      o aviso "akmods signing key queued for enrollment" (sem NVIDIA, quem importa o
+      `akmods_mok` é o `apps`, antes do `Software | Install DNF packages`).
+- [ ] `sudo mokutil --list-new` lista a chave (subject com o hostname). `ls -l /etc/pki/akmods/certs/`
+      → **um** `.der` real + o symlink `public_key.der` apontando para ele.
+- [ ] Reboot → tela azul do MokManager → **Enroll MOK** → Continue → senha `fedora-afpi` → Reboot.
+- [ ] `sudo mokutil --test-key /etc/pki/akmods/certs/public_key.der` → "is already enrolled".
+- [ ] `lsmod | grep vboxdrv` → carregado; `modinfo -F signer vboxdrv` bate com o subject de
+      `openssl x509 -inform der -in /etc/pki/akmods/certs/public_key.der -noout -subject`.
+      Se não carregou: `sudo journalctl -b -u akmods` e `dmesg | grep -i -E "vbox|key"`.
+- [ ] `VBoxManage --version` → 7.2.x; usuário nos grupos `vboxusers` e `vboxsf` (`id`, após novo login).
+
+### Etapa 4 — Conferência por role
+
+Nas duas VMs:
+- [ ] **Hostname:** agora `noir` (`system_hostname`): esperado, a VM fica com o nome da máquina.
+- [ ] **Repos:** `dnf repo list --enabled` → `rpmfusion-free*`, `rpmfusion-nonfree*`, `brave-browser`,
+      `code`, `gh-cli`; `dnf repo list --enabled | grep -i debug` → vazio.
+- [ ] **Multimídia:** `rpm -q ffmpeg` (e `ffmpeg-free` ausente). A GPU da VM (VMSVGA) não é
+      Intel/AMD/NVIDIA: os drivers de vídeo são pulados.
+- [ ] **Apps:** `rpm -q chromium clamav steam VirtualBox brave-browser brave-origin code gh`;
+      `systemctl is-active clamav-freshclam`; `flatpak list --app` com os de `flatpak_apps_common`.
+- [ ] **Steam:** `~/.local/share/applications/steam.desktop` com o `Exec=env __NV_PRIME_...`.
+- [ ] **Shell:** `echo $SHELL` → zsh (novo login); tema `kali-like-alt`; `grep -A3 "API" ~/.zshrc`
+      com o conteúdo do vault; aliases presentes. Também para o root (`sudo -i`).
+- [ ] **GRUB:** `grep -E "GRUB_TIMEOUT|GRUB_GFXMODE" /etc/default/grub`;
+      `sudo ls -l /boot/grub2/grub.cfg` com data da execução; menu no boot espera 5 s.
+- [ ] **Fontes:** `fc-list | grep -i -E "fira code|roboto"`.
+- [ ] **Cedilha** (após logout/login): no editor de texto e no Brave, `'` + `c` → `ç` (e `'` + `C` → `Ç`).
+- [ ] **AI tools:** `claude --version`; `agy --version`; `pipx list` com markitdown, notebooklm-py, pdf2docx.
+
+Só na GNOME:
+- [ ] **Pacotes:** `rpm -q flatseal gnome-tweaks`; `flatpak list --app` também com os de
+      `flatpak_apps_gnome` (VideoDownloader, ExtensionManager, Fragments).
+- [ ] **Ptyxis:** abre com 120x35, cursor sublinhado, Fira Code 10, opacidade 0.95
+      (`dconf dump /org/gnome/Ptyxis/` mostra os valores).
+- [ ] Nenhuma task KDE rodou: no `run1.log`, `KDE |`, `Wayland |` e `Zoom |` aparecem como `skipping`.
+
+Só na KDE:
+- [ ] **Pacotes:** `rpm -q ktorrent plasma-sdk kde-gtk-config`; `flatpak list --app` também com o
+      `com.markopejic.downloader`.
+- [ ] **Konsole:** `~/.local/share/konsole/kali-like-alt.{profile,colorscheme}` existem; no
+      `~/.config/konsolerc`: `DefaultProfile=kali-like-alt.profile`, `RememberWindowSize=false`,
+      `ExpandTabWidth=true`. Abrir o Konsole: perfil e cores aplicados, abas na largura toda.
+- [ ] **Overrides Flatpak:** `flatpak override --user --show com.bitwarden.desktop` → sockets
+      `wayland;fallback-x11;!x11`, `XDG_CURRENT_DESKTOP=KDE`, `GTK_USE_PORTAL=1`, sem `GTK_IM_MODULE`;
+      `flatpak override --user --show us.zoom.Zoom` → socket `wayland`, `XDG_CURRENT_DESKTOP=KDE`,
+      `GTK_USE_PORTAL=1`, filesystem `!home`, sem `GTK_IM_MODULE`/`QT_IM_MODULE`.
+- [ ] **Cedilha nos Flatpaks:** `'` + `c` → `ç` no Bitwarden (Wayland nativo) e no Zoom (XWayland).
+- [ ] Nenhuma task GNOME rodou: no `run1.log`, `GNOME |` aparece como `skipping` (sem Ptyxis).
+
+### Etapa 5 — Idempotência e `--check`
+```bash
+ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass 2>&1 | tee run2.log
+ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass --check 2>&1 | tee check.log
+```
+- [ ] Não para no reboot gate (nada novo desde o boot).
+- [ ] `changed=0`. Todas as tasks têm `creates`/`changed_when`/leitura antes e depois (Ptyxis,
+      repos de debug), então qualquer `changed` aqui é bug: anotar a task e a VM.
+- [ ] Nenhum `MOK | Request enrollment` nem aviso de MOK (chave já registrada).
+- [ ] `--check` com tudo instalado → `failed=0`. Anotar aqui cada task que falhar.
+
+### Etapa 6 — Limpeza de kernels, reboot gate e rebuild do `vboxdrv` em outro kernel (só uma VM)
+O repo `updates` costuma ter só o kernel mais novo; o anterior vem do `fedora` ou do Koji
+(`dnf --showduplicates list kernel`).
+- [ ] **Teste 1** — instalar um kernel anterior (`sudo dnf install kernel-<ver> kernel-devel-<ver>`),
+      continuar no novo e rodar `--tags kernel` → sobra só o novo; repetir → sem mudança.
+- [ ] **Teste 2 (segurança)** — reinstalar o antigo (com `kernel-devel`), dar boot nele pelo GRUB
+      (`uname -r`). O `akmods` compila e **assina** o `vboxdrv` para esse kernel no boot:
+      `lsmod | grep vboxdrv` e `modinfo -F signer vboxdrv`. Rodar `--tags kernel` → os **dois**
+      continuam instalados (o em uso nunca entra na lista).
+- [ ] **Teste 3** — com um só kernel: a remoção é pulada.
+- [ ] Depois de instalar o kernel antigo, uma execução **completa** para no reboot gate (esperado:
+      o `needs-restarting -r` conta qualquer kernel instalado depois do boot, mesmo mais antigo).
+      Os testes com `--tags kernel` não passam pelo gate, que só roda com a tag `update`.
+
+### Etapa 7 — Secure Boot desligado (opcional, só uma VM)
+- [ ] Restaurar o snapshot `limpo`, desligar o Secure Boot
+      (`VBoxManage modifynvram $VM secureboot --disable`), rodar o playbook (etapas 2–3):
+      `is_secure_boot: false`, nenhuma task de MOK roda, nenhuma chave em `/etc/pki/akmods/certs/`
+      gerada pelo playbook, sem aviso de MOK, e o `vboxdrv` carrega sem assinatura.
 
 ## 6. Documentação
 
-- [ ] README: explicar o reboot gate. A 1ª execução numa máquina recém-atualizada para depois do
+- [x] README: explicar o reboot gate. A 1ª execução numa máquina recém-atualizada para depois do
       upgrade: reiniciar e rodar o mesmo comando de novo. Revisar também o fluxo em 5 passos com
       tags da seção "NVIDIA Users", que o gate simplifica (`update` → reboot → resto).
+      Feito (2026-10-02): aviso do reboot gate em "Run the Playbook" e nova seção "NVIDIA and
+      Secure Boot" (rodar o mesmo comando 3×, com reboot depois do update e depois do driver/MOK; a
+      3ª instala Vulkan/VA-API, que dependem do `nvidia-smi` funcionando). Role `update` e o
+      bloco de MOK descritos de acordo (o MOK agora é do `akmods_mok`).
 
 ---
 
@@ -150,5 +290,5 @@ Testes **nunca** rodam no host (`noir`), nem só leitura / `--check`: só em con
 2. ~~Enroll akmods compartilhado → `mok_password` (seção 2)~~ — feito
 3. ~~Handler do GRUB → assert de distro (seção 3)~~ — feito
 4. ~~Polimento de idempotência / `--check` (seção 4)~~ — feito (o `--check` geral ficou para as VMs)
-5. README do reboot gate (seção 6)
-6. Validação na VM com Secure Boot (seção 5), quando o usuário tiver a VM
+5. ~~README do reboot gate (seção 6)~~ — feito
+6. Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5) — **próximo**, com o usuário

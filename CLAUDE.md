@@ -83,12 +83,23 @@ Receitas que funcionaram (imagem `registry.fedoraproject.org/fedora:44`):
 - Driver NVIDIA no container: `-e '{"is_nvidia": true, "nvidia_driver_packages": ["kmodtool"]}'`
   para não baixar ~1 GB. O módulo não carrega no container de qualquer jeito.
 - `grub2-mkconfig` não funciona em container (não sonda o disco): usar um falso que registra o `-o`.
+- Tasks só do GNOME (Ptyxis): container de longa duração (`podman run -d … sleep infinity` + `podman exec`)
+  com `sudo dbus-daemon dconf ptyxis`, um usuário comum com `NOPASSWD`, `Defaults env_keep +=
+  "DBUS_SESSION_BUS_ADDRESS XDG_RUNTIME_DIR"` (faz o papel do `pam_systemd` no host real) e um
+  `dbus-daemon --session --address=unix:path=/run/user/1000/bus --fork` desse usuário. O playbook
+  roda **como o usuário**, com `XDG_CURRENT_DESKTOP=GNOME` e `ANSIBLE_BECOME_ASK_PASS=False`
+  (o `env_setup` usa o `SUDO_USER`). Ao rodar `podman exec … sh -c` com `--fork`, usar `</dev/null`
+  e redirecionar a saída, senão o exec não retorna. O `ansible-galaxy` como esse usuário travou:
+  instalar como root com `-p /usr/share/ansible/collections`.
+- O `site.yml` completo **não** roda num container comum: sem systemd (serviços, `hostname`), sem
+  `/etc/default/grub` e sem o vault (`-e 'api_keys="# fake"'`). O `--check` geral é só na VM.
 - Rodar duas vezes para conferir a idempotência (`changed=0` na 2ª) e testar o `--check`.
 - zsh: escrever `${VAR}:ro`, não `$VAR:ro` (o zsh lê `:r` como modificador).
 - Ao terminar, remover os containers (`podman rm -f`).
 
 O que depende de hardware (enroll real no MokManager, módulos carregando, reboot de verdade) é
-testado pelo usuário numa VM com Secure Boot. Deixar no `TODO.md` o que falta conferir lá.
+testado pelo usuário em duas VMs com Secure Boot, uma GNOME e outra KDE (roteiro na seção 5 do
+`TODO.md`). Deixar no `TODO.md` o que falta conferir lá.
 
 ## Particularidades do Fedora
 
