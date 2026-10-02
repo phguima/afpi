@@ -127,11 +127,12 @@ handler do GRUB, assert de distro, repos de debug, Ptyxis.
 
 Duas VMs iguais, uma com a edição **Workstation** (GNOME) e outra com a **KDE Plasma**. As etapas
 0–5 valem para as duas: marcar o item quando passar nas duas e, se falhar só numa, anotar qual
-(`GNOME:` / `KDE:`). As etapas 6 e 7 não dependem do desktop: basta uma VM (a GNOME).
+(`GNOME:` / `KDE:`). As etapas 6 e 7 não dependem do desktop: basta uma VM (a GNOME). A etapa 8
+(NVIDIA) é no `noir` reinstalado.
 
 - As VMs não têm GPU NVIDIA: o role `nvidia` e as tasks NVIDIA do `hardware` são pulados. Quem
-  exercita o `akmods_mok` aqui é o VirtualBox do RPM Fusion (`akmod-VirtualBox`). O driver NVIDIA só
-  com GPU real (passthrough) ou no próprio `noir`, que está com Secure Boot desligado.
+  exercita o `akmods_mok` aqui é o VirtualBox do RPM Fusion (`akmod-VirtualBox`). O driver NVIDIA é
+  testado no `noir` reinstalado (etapa 8).
 - **Rodar o playbook de um terminal dentro da sessão gráfica**, não por SSH: o `env_setup` decide
   GNOME/KDE pelo `XDG_CURRENT_DESKTOP` de quem chama, e sem ele todas as tasks de desktop são
   puladas sem erro. Conferir antes: `echo $XDG_CURRENT_DESKTOP` → `GNOME` / `KDE`.
@@ -280,6 +281,52 @@ O repo `updates` costuma ter só o kernel mais novo; o anterior vem do `fedora` 
       `is_secure_boot: false`, nenhuma task de MOK roda, nenhuma chave em `/etc/pki/akmods/certs/` (`sudo ls`)
       gerada pelo playbook, sem aviso de MOK, e o `vboxdrv` carrega sem assinatura.
 
+### Etapa 8 — NVIDIA no `noir` (reinstalação limpa, Secure Boot ligado)
+
+Única forma de testar o caminho NVIDIA: as VMs não têm GPU NVIDIA e o VirtualBox 7 não faz passthrough
+de PCI. O `noir` é híbrido (Intel + NVIDIA). Uma reinstalação do zero exercita a instalação do
+driver (com o driver já funcionando, o bloco do role `nvidia` é pulado) e, com Secure Boot ligado,
+a chave akmods **compartilhada de verdade** entre NVIDIA (role `nvidia`, 1º a importar) e
+VirtualBox (role `apps`, 2º), que só foi visto em container. Fazer depois das VMs.
+
+Antes de reinstalar:
+- [ ] Backup: `group_vars/all/secrets.yml` + senha do vault, `~/.ssh`, `~/.gnupg`, `~/.claude`,
+      `~/wks` (repos com tudo commitado/pushado), perfis de navegador e o que mais for local.
+- [ ] **Segundo disco (`thevoid`, LUKS em `/dev/nvme1n1p3`, ver `zsh_aliases`):** no instalador,
+      selecionar **só** o disco do sistema. Não formatar nem montar o `nvme1n1`.
+- [ ] Firmware: ligar o Secure Boot (chaves padrão de fábrica) e deixar a GPU em modo
+      **Hybrid**, para a tela seguir pela Intel enquanto o `nvidia` não carrega.
+- [ ] Instalar o Fedora 44 com a edição usada no `noir`; `mokutil --sb-state` → `SecureBoot enabled`.
+
+Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
+- [ ] `./bootstrap.sh` → hostname `noir`.
+- [ ] **1ª execução** → para no reboot gate. Reiniciar.
+- [ ] **2ª execução**: o role `nvidia` gera a chave (`MOK | Generate akmods signing key pair`),
+      faz **um** `MOK | Request enrollment` e mostra o aviso de MOK; instala o driver, espera o
+      build do akmods, roda `akmods --force` e `dracut`, e pede reboot. Mais adiante, a importação
+      do `akmods_mok` pelo `apps` (VirtualBox) **não** gera chave nem import (`ok`/`skipping`).
+      Termina com `failed=0`. `sudo ls -l /etc/pki/akmods/certs/` → um `.der` + o symlink.
+- [ ] Reboot → MokManager → **Enroll MOK** → senha `fedora-afpi` → Reboot.
+- [ ] `nvidia-smi` funciona; `modinfo -F signer nvidia` e `modinfo -F signer vboxdrv` → o mesmo
+      signer (a chave única); `lsmod | grep -E "^nvidia|vboxdrv"`;
+      `sudo mokutil --test-key /etc/pki/akmods/certs/public_key.der` → "already enrolled".
+- [ ] PRIME: com `mesa-demos`, `glxinfo -B | grep renderer` → Intel e
+      `nvidia-run glxinfo -B | grep renderer` → NVIDIA (alias do `.zshrc`).
+- [ ] **3ª execução**: agora com `has_nvidia_driver`, o `hardware` instala Vulkan e VA-API/NVENC
+      (`nvidia_vulkan_packages`, `nvidia_multimedia_packages`) e grava `/etc/modprobe.d/nvidia.conf`
+      (power management); o bloco de instalação do `nvidia` é pulado. Se o `noir` for ASUS
+      (`is_asus`): COPR `asus-linux`, `asusctl`/`supergfxctl`, `supergfxd` ativo e o autostart do
+      ROG Control Center.
+- [ ] Reboot (para o `nvidia.conf` valer): `cat /sys/module/nvidia/parameters/DynamicPowerManagement`
+      → `2`; suspender e voltar sem travar (o troubleshooting do README fala de freezes).
+- [ ] Steam: `~/.local/share/applications/steam.desktop` com o `__NV_PRIME_...` e o jogo/launcher
+      aparecendo no `nvidia-smi`.
+- [ ] **4ª execução**: `changed=0`, sem aviso de MOK nem de reboot; depois `--check` → `failed=0`.
+- [ ] Na próxima atualização de kernel de verdade: depois do reboot, `modinfo -F signer nvidia`
+      no kernel novo (o `akmods` recompila e assina no boot) e `nvidia-smi` funcionando.
+- [ ] Decidir se o `noir` fica com Secure Boot ligado ou volta a desligar (os módulos assinados
+      carregam nos dois casos) e atualizar o `CLAUDE.md` ("Secure Boot desligado").
+
 ## 6. Documentação
 
 - [x] README: explicar o reboot gate. A 1ª execução numa máquina recém-atualizada para depois do
@@ -318,4 +365,5 @@ O repo `updates` costuma ter só o kernel mais novo; o anterior vem do `fedora` 
 3. ~~Handler do GRUB → assert de distro (seção 3)~~ — feito
 4. ~~Polimento de idempotência / `--check` (seção 4)~~ — feito (o `--check` geral ficou para as VMs)
 5. ~~README do reboot gate (seção 6)~~ — feito
-6. Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5) — **próximo**, com o usuário
+6. Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5, etapas 0–7) — **em andamento** (etapas 1–3 ok)
+7. NVIDIA no `noir` reinstalado com Secure Boot (seção 5, etapa 8), depois das VMs
