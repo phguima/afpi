@@ -48,10 +48,14 @@
   check_mode: false
   tags: [system, kernel]
 
+# allowerasing also removes what is bound to those exact kernels: the kmod-<name>-<kernel> packages
+# akmods built for them (VirtualBox, NVIDIA). Without it dnf refuses with a depsolve error, since
+# each kmod requires its own kernel-uname-r. The running and the newest kernel are never listed.
 - name: Kernel | Remove old kernels
   ansible.builtin.dnf:
     name: "{{ old_kernels_list.stdout_lines }}"
     state: absent
+    allowerasing: true
   when: 
     - old_kernels_list.stdout_lines | length > 0
     - not ansible_check_mode

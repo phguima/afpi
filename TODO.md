@@ -281,6 +281,17 @@ O repo `updates` costuma ter só o kernel mais novo; o anterior vem do `fedora` 
 (`dnf list kernel --showduplicates`).
 - [ ] **Teste 1** — instalar um kernel anterior (`sudo dnf install kernel-<ver> kernel-devel-<ver>`),
       continuar no novo e rodar `--tags kernel` → sobra só o novo; repetir → sem mudança.
+      🔴 Achado na VM (2026-10-02): `Kernel | Remove old kernels` falhou com "Depsolve Error"
+      (`kmod-VirtualBox-<kernel antigo>` requires `kernel-uname-r = <kernel antigo>`). O akmods
+      compila um `kmod-VirtualBox-<kernel>` para cada kernel instalado com `kernel-devel`, e o
+      módulo `dnf` não remove dependentes sem `allowerasing`. No `noir` o mesmo valeria para o
+      `kmod-nvidia-<kernel>`. Corrigido com `allowerasing: true` (remove junto os kmods daquele
+      kernel; o em uso e o mais novo nunca entram na lista). Validado em container `fedora:44`
+      com os kernels `6.19.10` (antigo) e `7.2.8` (em uso) + um kmod falso que exige
+      `kernel-uname-r` do antigo: código anterior → o mesmo depsolve da VM; com o patch → remove
+      `kernel-core`, `kernel-modules-core` e o kmod do antigo, 2ª execução pula a task.
+      Repetir na VM: `git pull` e `--tags kernel` (o kernel antigo continua lá: o dnf abortou).
+      Conferir também `rpm -qa "kmod-VirtualBox*"` → só o do kernel novo.
 - [ ] **Teste 2 (segurança)** — reinstalar o antigo (com `kernel-devel`), dar boot nele pelo GRUB
       (`uname -r`). O `akmods` compila e **assina** o `vboxdrv` para esse kernel no boot:
       `lsmod | grep vboxdrv` e `modinfo -F signer vboxdrv`. Rodar `--tags kernel` → os **dois**
