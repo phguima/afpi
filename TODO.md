@@ -169,14 +169,15 @@ rodar as duas VMs ao mesmo tempo pede 16 GB livres no host; dá para fazer uma d
 git clone https://github.com/phguima/afpi && cd afpi && ./bootstrap.sh
 ```
 Copiar o `secrets.yml` (vault) para `group_vars/all/` se o clone não o trouxer.
-- [ ] `bootstrap.sh` instala o Ansible e o `community.general` sem erro.
+- [x] `bootstrap.sh` instala o Ansible e o `community.general` sem erro.
 - [ ] O `bootstrap.sh` pergunta o hostname (seção 7): responder `fedora44-afpi-gnome` /
       `fedora44-afpi-kde`. `cat host_vars/127.0.0.1.yml` mostra o nome; `git status` não lista
       o `host_vars/`. Se o bootstrap já tinha rodado antes da seção 7: `git pull` e rodar de novo.
-- [ ] Os facts batem com a etapa 0 (só as tasks `always`, sem mudar nada):
+- [x] Os facts batem com a etapa 0 (só as tasks `always`, sem mudar nada):
       `ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass --tags never -v 2>&1 | grep -E '"is_(secure_boot|gnome|kde)"'`
       → `is_secure_boot: true` nas duas; `is_gnome: true` / `is_kde: false` na GNOME e o
       contrário na KDE.
+      Etapa verificada nas VMs (2026-10-02).
 - Não rodar `--check` agora: em máquina limpa ele falha por desenho (repos de terceiros e
   oh-my-zsh só simulados, então tasks seguintes não acham o que precisam). Vai para a etapa 5.
 
@@ -184,26 +185,29 @@ Copiar o `secrets.yml` (vault) para `group_vars/all/` se o clone não o trouxer.
 ```bash
 ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass 2>&1 | tee run0.log
 ```
-- [ ] Depois do upgrade o playbook **para** com "needs a REBOOT before continuing" (sem os outros
+- [x] Depois do upgrade o playbook **para** com "needs a REBOOT before continuing" (sem os outros
       roles, sem o banner final). Se não pedir reboot, segue direto (etapa 3).
-- [ ] Reiniciar; `uname -r` → kernel mais recente.
+- [x] Reiniciar; `uname -r` → kernel mais recente.
+      Etapa verificada nas VMs (2026-10-02).
 
 ### Etapa 3 — 2ª execução: setup completo, chave akmods e VirtualBox
 ```bash
 ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass 2>&1 | tee run1.log
 ```
-- [ ] O `update` passa direto e termina com `failed=0` e o banner `AFPI DEPLOYMENT COMPLETED SUCCESSFULLY!`.
-- [ ] `MOK | Generate akmods signing key pair` e `MOK | Request enrollment` rodam uma vez e aparece
+- [x] O `update` passa direto e termina com `failed=0` e o banner `AFPI DEPLOYMENT COMPLETED SUCCESSFULLY!`.
+- [x] `MOK | Generate akmods signing key pair` e `MOK | Request enrollment` rodam uma vez e aparece
       o aviso "akmods signing key queued for enrollment" (sem NVIDIA, quem importa o
       `akmods_mok` é o `apps`, antes do `Software | Install DNF packages`).
-- [ ] `sudo mokutil --list-new` lista a chave (subject com o hostname). `ls -l /etc/pki/akmods/certs/`
+- [x] `sudo mokutil --list-new` lista a chave (subject com o hostname). `sudo ls -l /etc/pki/akmods/certs/`
       → **um** `.der` real + o symlink `public_key.der` apontando para ele.
-- [ ] Reboot → tela azul do MokManager → **Enroll MOK** → Continue → senha `fedora-afpi` → Reboot.
-- [ ] `sudo mokutil --test-key /etc/pki/akmods/certs/public_key.der` → "is already enrolled".
-- [ ] `lsmod | grep vboxdrv` → carregado; `modinfo -F signer vboxdrv` bate com o subject de
-      `openssl x509 -inform der -in /etc/pki/akmods/certs/public_key.der -noout -subject`.
+- [x] Reboot → tela azul do MokManager → **Enroll MOK** → Continue → senha `fedora-afpi` → Reboot.
+- [x] `sudo mokutil --test-key /etc/pki/akmods/certs/public_key.der` → "is already enrolled".
+- [x] `lsmod | grep vboxdrv` → carregado; `modinfo -F signer vboxdrv` bate com o subject de
+      `sudo openssl x509 -inform der -in /etc/pki/akmods/certs/public_key.der -noout -subject`.
       Se não carregou: `sudo journalctl -b -u akmods` e `dmesg | grep -i -E "vbox|key"`.
-- [ ] `VBoxManage --version` → 7.2.x; usuário nos grupos `vboxusers` e `vboxsf` (`id`, após novo login).
+- [x] `VBoxManage --version` → 7.2.x; usuário nos grupos `vboxusers` e `vboxsf` (`id`, após novo login).
+      Etapa verificada nas VMs (2026-10-02). O diretório `/etc/pki/akmods/certs/` não é legível
+      por usuário comum: `ls` e `openssl` nele precisam de `sudo` (roteiro corrigido).
 
 ### Etapa 4 — Conferência por role
 
@@ -273,7 +277,7 @@ O repo `updates` costuma ter só o kernel mais novo; o anterior vem do `fedora` 
 ### Etapa 7 — Secure Boot desligado (opcional, só uma VM)
 - [ ] Restaurar o snapshot `limpo`, desligar o Secure Boot
       (`VBoxManage modifynvram $VM secureboot --disable`), rodar o playbook (etapas 2–3):
-      `is_secure_boot: false`, nenhuma task de MOK roda, nenhuma chave em `/etc/pki/akmods/certs/`
+      `is_secure_boot: false`, nenhuma task de MOK roda, nenhuma chave em `/etc/pki/akmods/certs/` (`sudo ls`)
       gerada pelo playbook, sem aviso de MOK, e o `vboxdrv` carrega sem assinatura.
 
 ## 6. Documentação
