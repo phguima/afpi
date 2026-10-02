@@ -159,11 +159,12 @@ VBoxManage modifynvram $VM secureboot --enable
 (Pela interface: Sistema → Habilitar EFI + Habilitar Secure Boot → "Redefinir chaves para o padrão".)
 Disco de 80 GB: Steam, Flatpaks e os repos de terceiros ocupam bem mais que no AAPI. Com 8 GB cada,
 rodar as duas VMs ao mesmo tempo pede 16 GB livres no host; dá para fazer uma depois da outra.
-- [ ] Instalar cada edição com usuário administrador (`wheel`).
-- [ ] Em cada VM: `mokutil --sb-state` → `SecureBoot enabled`, e
+- [x] Instalar cada edição com usuário administrador (`wheel`).
+- [x] Em cada VM: `mokutil --sb-state` → `SecureBoot enabled`, e
       `od -An -tu1 -j4 -N1 /sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c`
       → `1`. Anotar `hostname` e `uname -r`.
-- [ ] Snapshot limpo de cada uma: `VBoxManage snapshot $VM take limpo` (VM desligada).
+- [x] Snapshot limpo de cada uma: `VBoxManage snapshot $VM take limpo` (VM desligada).
+      Verificado nas VMs (2026-10-02).
 
 ### Etapa 1 — Bootstrap
 ```bash
