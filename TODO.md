@@ -232,12 +232,13 @@ Nas duas VMs:
 
 Verificado nas VMs (2026-10-02).
 
-Só na GNOME (pendente):
-- [ ] **Pacotes:** `rpm -q flatseal gnome-tweaks`; `flatpak list --app` também com os de
+Só na GNOME:
+- [x] **Pacotes:** `rpm -q flatseal gnome-tweaks`; `flatpak list --app` também com os de
       `flatpak_apps_gnome` (VideoDownloader, ExtensionManager, Fragments).
-- [ ] **Ptyxis:** abre com 120x35, cursor sublinhado, Fira Code 10, opacidade 0.95
+- [x] **Ptyxis:** abre com 120x35, cursor sublinhado, Fira Code 10, opacidade 0.95
       (`dconf dump /org/gnome/Ptyxis/` mostra os valores).
-- [ ] Nenhuma task KDE rodou: no `run1.log`, `KDE |`, `Wayland |` e `Zoom |` aparecem como `skipping`.
+- [x] Nenhuma task KDE rodou: no `run1.log`, `KDE |`, `Wayland |` e `Zoom |` aparecem como `skipping`.
+      Verificado na VM GNOME (2026-10-02).
 
 Só na KDE:
 - [x] **Pacotes:** `rpm -q ktorrent plasma-sdk kde-gtk-config`; `flatpak list --app` também com o
@@ -303,10 +304,11 @@ O repo `updates` costuma ter só o kernel mais novo; o anterior vem do `fedora` 
       Etapa verificada na VM (2026-10-02), depois da correção do `allowerasing`.
 
 ### Etapa 7 — Secure Boot desligado (opcional, só uma VM)
-- [ ] Restaurar o snapshot `limpo`, desligar o Secure Boot
+- [x] Restaurar o snapshot `limpo`, desligar o Secure Boot
       (`VBoxManage modifynvram $VM secureboot --disable`), rodar o playbook (etapas 2–3):
       `is_secure_boot: false`, nenhuma task de MOK roda, nenhuma chave em `/etc/pki/akmods/certs/` (`sudo ls`)
       gerada pelo playbook, sem aviso de MOK, e o `vboxdrv` carrega sem assinatura.
+      Verificado na VM GNOME (2026-10-02).
 
 ### Etapa 8 — NVIDIA no `noir` (reinstalação limpa, Secure Boot ligado)
 
@@ -393,5 +395,5 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 3. ~~Handler do GRUB → assert de distro (seção 3)~~ — feito
 4. ~~Polimento de idempotência / `--check` (seção 4)~~ — feito (o `--check` geral ficou para as VMs)
 5. ~~README do reboot gate (seção 6)~~ — feito
-6. Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5, etapas 0–7) — **em andamento** (etapas 1–6 ok; falta o bloco GNOME da etapa 4 e a etapa 7, opcional)
+6. ~~Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5, etapas 0–7)~~ — feito
 7. NVIDIA no `noir` reinstalado com Secure Boot (seção 5, etapa 8), depois das VMs
