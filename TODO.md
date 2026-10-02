@@ -279,7 +279,7 @@ ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass --check 2>&1 | te
 ### Etapa 6 — Limpeza de kernels, reboot gate e rebuild do `vboxdrv` em outro kernel (só uma VM)
 O repo `updates` costuma ter só o kernel mais novo; o anterior vem do `fedora` ou do Koji
 (`dnf list kernel --showduplicates`).
-- [ ] **Teste 1** — instalar um kernel anterior (`sudo dnf install kernel-<ver> kernel-devel-<ver>`),
+- [x] **Teste 1** — instalar um kernel anterior (`sudo dnf install kernel-<ver> kernel-devel-<ver>`),
       continuar no novo e rodar `--tags kernel` → sobra só o novo; repetir → sem mudança.
       🔴 Achado na VM (2026-10-02): `Kernel | Remove old kernels` falhou com "Depsolve Error"
       (`kmod-VirtualBox-<kernel antigo>` requires `kernel-uname-r = <kernel antigo>`). O akmods
@@ -292,14 +292,15 @@ O repo `updates` costuma ter só o kernel mais novo; o anterior vem do `fedora` 
       `kernel-core`, `kernel-modules-core` e o kmod do antigo, 2ª execução pula a task.
       Repetir na VM: `git pull` e `--tags kernel` (o kernel antigo continua lá: o dnf abortou).
       Conferir também `rpm -qa "kmod-VirtualBox*"` → só o do kernel novo.
-- [ ] **Teste 2 (segurança)** — reinstalar o antigo (com `kernel-devel`), dar boot nele pelo GRUB
+- [x] **Teste 2 (segurança)** — reinstalar o antigo (com `kernel-devel`), dar boot nele pelo GRUB
       (`uname -r`). O `akmods` compila e **assina** o `vboxdrv` para esse kernel no boot:
       `lsmod | grep vboxdrv` e `modinfo -F signer vboxdrv`. Rodar `--tags kernel` → os **dois**
       continuam instalados (o em uso nunca entra na lista).
-- [ ] **Teste 3** — com um só kernel: a remoção é pulada.
-- [ ] Depois de instalar o kernel antigo, uma execução **completa** para no reboot gate (esperado:
+- [x] **Teste 3** — com um só kernel: a remoção é pulada.
+- [x] Depois de instalar o kernel antigo, uma execução **completa** para no reboot gate (esperado:
       o `needs-restarting -r` conta qualquer kernel instalado depois do boot, mesmo mais antigo).
       Os testes com `--tags kernel` não passam pelo gate, que só roda com a tag `update`.
+      Etapa verificada na VM (2026-10-02), depois da correção do `allowerasing`.
 
 ### Etapa 7 — Secure Boot desligado (opcional, só uma VM)
 - [ ] Restaurar o snapshot `limpo`, desligar o Secure Boot
@@ -392,5 +393,5 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 3. ~~Handler do GRUB → assert de distro (seção 3)~~ — feito
 4. ~~Polimento de idempotência / `--check` (seção 4)~~ — feito (o `--check` geral ficou para as VMs)
 5. ~~README do reboot gate (seção 6)~~ — feito
-6. Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5, etapas 0–7) — **em andamento** (etapas 1–5 ok; falta o bloco GNOME da etapa 4, e as etapas 6–7)
+6. Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5, etapas 0–7) — **em andamento** (etapas 1–6 ok; falta o bloco GNOME da etapa 4 e a etapa 7, opcional)
 7. NVIDIA no `noir` reinstalado com Secure Boot (seção 5, etapa 8), depois das VMs
