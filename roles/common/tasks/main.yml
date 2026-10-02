@@ -4,6 +4,7 @@
 - name: System | Set System Hostname
   ansible.builtin.hostname:
     name: "{{ system_hostname }}"
+  when: system_hostname | default('') | length > 0
   tags: [system, hostname]
 
 - name: System | Ensure workspace directory exists

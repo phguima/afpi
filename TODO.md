@@ -170,6 +170,9 @@ git clone https://github.com/phguima/afpi && cd afpi && ./bootstrap.sh
 ```
 Copiar o `secrets.yml` (vault) para `group_vars/all/` se o clone não o trouxer.
 - [ ] `bootstrap.sh` instala o Ansible e o `community.general` sem erro.
+- [ ] O `bootstrap.sh` pergunta o hostname (seção 7): responder `fedora44-afpi-gnome` /
+      `fedora44-afpi-kde`. `cat host_vars/127.0.0.1.yml` mostra o nome; `git status` não lista
+      o `host_vars/`. Se o bootstrap já tinha rodado antes da seção 7: `git pull` e rodar de novo.
 - [ ] Os facts batem com a etapa 0 (só as tasks `always`, sem mudar nada):
       `ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass --tags never -v 2>&1 | grep -E '"is_(secure_boot|gnome|kde)"'`
       → `is_secure_boot: true` nas duas; `is_gnome: true` / `is_kde: false` na GNOME e o
@@ -205,7 +208,8 @@ ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass 2>&1 | tee run1.l
 ### Etapa 4 — Conferência por role
 
 Nas duas VMs:
-- [ ] **Hostname:** agora `noir` (`system_hostname`): esperado, a VM fica com o nome da máquina.
+- [ ] **Hostname:** `hostnamectl hostname` → o nome dado no bootstrap (`fedora44-afpi-gnome` /
+      `fedora44-afpi-kde`), e o `System | Set System Hostname` deu `changed` no `run1.log`.
 - [ ] **Repos:** `dnf repo list --enabled` → `rpmfusion-free*`, `rpmfusion-nonfree*`, `brave-browser`,
       `code`, `gh-cli`; `dnf repo list --enabled | grep -i debug` → vazio.
 - [ ] **Multimídia:** `rpm -q ffmpeg` (e `ffmpeg-free` ausente). A GPU da VM (VMSVGA) não é
@@ -281,6 +285,25 @@ O repo `updates` costuma ter só o kernel mais novo; o anterior vem do `fedora` 
       Secure Boot" (rodar o mesmo comando 3×, com reboot depois do update e depois do driver/MOK; a
       3ª instala Vulkan/VA-API, que dependem do `nvidia-smi` funcionando). Role `update` e o
       bloco de MOK descritos de acordo (o MOK agora é do `akmods_mok`).
+
+---
+
+## 7. Hostname perguntado no `bootstrap.sh`
+
+- [x] 🟠 O `system_hostname: "noir"` fixo no `all.yml` renomeava qualquer máquina (inclusive as VMs
+      de teste) para `noir`. Agora o `bootstrap.sh` pergunta o hostname (padrão: o valor já salvo
+      ou o hostname atual; Enter mantém), valida (RFC 1123: letras, dígitos e `-`, até 63) e grava
+      em `host_vars/127.0.0.1.yml` (no `.gitignore`), que vence o `group_vars/all`. O `all.yml` fica
+      com `system_hostname: ""` e a task só roda quando há nome. Perguntar no bootstrap, e não com
+      `vars_prompt`, evita que o playbook pare para pedir algo a cada execução (até com `--tags`).
+      Sem terminal (`stdin` não é tty), o bootstrap não pergunta e não grava nada.
+      Validado (2026-10-02) em container `fedora:44` (`script` para simular o terminal): nome
+      inválido (`-bad-`) é recusado e pergunta de novo; nome válido gravado; 2ª execução com Enter
+      mantém o salvo; máquina nova com Enter grava o hostname atual; sem tty só avisa;
+      `ansible … -m debug -a var=system_hostname` → o nome com o `host_vars`, `""` sem ele; sem
+      `host_vars` a task `System | Set System Hostname` é pulada; `git check-ignore` confirma.
+      Falta: aplicar o hostname de verdade (precisa de systemd) — nas VMs, seção 5, etapas 1 e 4.
+      No `noir`: rodar o `./bootstrap.sh` uma vez e responder `noir` (ou só Enter, que mantém o atual).
 
 ---
 

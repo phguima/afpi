@@ -25,7 +25,10 @@ nota de validação no mesmo commit.
   (driver NVIDIA, VirtualBox do RPM Fusion). Idempotente: importar duas vezes não faz nada.
 - `roles/update` termina com um **reboot gate**: `dnf needs-restarting -r` → rc 1 encerra o play
   pedindo reboot (`meta: end_host`). Numa máquina nova a 1ª execução quase sempre para ali.
-- `group_vars/all/all.yml`: todas as variáveis, inclusive `mok_password`.
+- `group_vars/all/all.yml`: todas as variáveis, inclusive `mok_password`. O `system_hostname` fica
+  vazio (= não mexe): o hostname é perguntado pelo `bootstrap.sh` e gravado em
+  `host_vars/127.0.0.1.yml` (no `.gitignore`, por máquina), que vence o `group_vars`. Nada no
+  playbook pede input durante a execução: perguntas vão para o `bootstrap.sh`.
 - `group_vars/all/secrets.yml`: **Ansible Vault**, só com `api_keys`. O Claude não tem a senha do
   vault: não tentar abrir; pedir ao usuário quando precisar mexer. Os arquivos de
   `group_vars/all/` carregam em ordem alfabética, então uma variável no vault vence a do `all.yml`.

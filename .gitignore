@@ -16,3 +16,5 @@ Thumbs.db
 roles/desktop/files/profile_1.jpg
 # (Nota: O wallpaper_1.jpg foi liberado para o repo. A foto de perfil fica no Vault).
 reports/
+# Machine-specific settings written by bootstrap.sh (hostname)
+host_vars/

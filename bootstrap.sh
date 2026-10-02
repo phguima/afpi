@@ -45,7 +45,39 @@ if [ ! -f "group_vars/all/all.yml" ]; then
     exit 1
 fi
 
-# 4. Vault Check
+# 4. Hostname
+# Asked here, not in the playbook, so ansible-playbook never stops for input. The answer goes to
+# host_vars/127.0.0.1.yml (git-ignored, machine-specific), which overrides group_vars/all.
+HOST_VARS="host_vars/127.0.0.1.yml"
+current_hostname=$(hostnamectl hostname 2>/dev/null || true)
+current_hostname="${current_hostname:-$HOSTNAME}"
+if [ -f "$HOST_VARS" ]; then
+    saved_hostname=$(sed -n 's/^system_hostname: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' "$HOST_VARS")
+fi
+default_hostname="${saved_hostname:-$current_hostname}"
+
+if [ -t 0 ]; then
+    while true; do
+        read -r -p "$(echo -e "${C_BLUE}==>${C_RESET} Hostname [${default_hostname}]: ")" new_hostname
+        new_hostname="${new_hostname:-$default_hostname}"
+        # RFC 1123 label: letters, digits and '-', 1-63 chars, no leading/trailing '-'
+        if [[ "$new_hostname" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$ ]]; then
+            break
+        fi
+        error "Invalid hostname '${new_hostname}': use letters, digits and '-' (max 63 chars)."
+    done
+    mkdir -p host_vars
+    cat > "$HOST_VARS" <<EOF
+---
+# Written by bootstrap.sh: settings for this machine only (not tracked by git).
+system_hostname: "${new_hostname}"
+EOF
+    success "Hostname '${new_hostname}' saved to ${HOST_VARS} (applied by the playbook)."
+else
+    warn "No terminal: hostname not asked. The playbook keeps it as is unless ${HOST_VARS} sets it."
+fi
+
+# 5. Vault Check
 if [ -f "group_vars/all/secrets.yml" ]; then
     if ! grep -q "\$ANSIBLE_VAULT" "group_vars/all/secrets.yml"; then
         warn "Note: 'group_vars/all/secrets.yml' is NOT encrypted. Consider running:"
@@ -53,7 +85,7 @@ if [ -f "group_vars/all/secrets.yml" ]; then
     fi
 fi
 
-# 5. Final Instructions
+# 6. Final Instructions
 echo ""
 prompt "Bootstrap complete! You can now run the AFPI playbook using:"
 echo -e "${C_GREEN}ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass${C_RESET}"

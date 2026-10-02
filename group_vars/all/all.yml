@@ -4,7 +4,9 @@ dnf_max_parallel_downloads: 15
 dnf_fastestmirror: "True"
 
 # System Settings
-system_hostname: "noir"
+# Empty = keep the current hostname. ./bootstrap.sh asks for it and saves it to
+# host_vars/127.0.0.1.yml (git-ignored), which takes precedence over this file.
+system_hostname: ""
 
 # GRUB Settings
 grub_timeout: 5

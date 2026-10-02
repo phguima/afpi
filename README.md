@@ -59,6 +59,7 @@ Prepare the Ansible environment:
 ```bash
 ./bootstrap.sh
 ```
+It also asks for the machine's **hostname** (Enter keeps the current one) and saves it to `host_vars/127.0.0.1.yml`, which is git-ignored and overrides `system_hostname` from `group_vars/all/all.yml`. The playbook applies it without stopping to ask; with no answer saved, the hostname is left untouched. Run `./bootstrap.sh` again to change it.
 
 ### 2. Run the Playbook
 Apply the full configuration (the provided `ansible.cfg` is optimized for faster deployment):
