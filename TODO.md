@@ -171,7 +171,7 @@ git clone https://github.com/phguima/afpi && cd afpi && ./bootstrap.sh
 ```
 Copiar o `secrets.yml` (vault) para `group_vars/all/` se o clone não o trouxer.
 - [x] `bootstrap.sh` instala o Ansible e o `community.general` sem erro.
-- [ ] O `bootstrap.sh` pergunta o hostname (seção 7): responder `fedora44-afpi-gnome` /
+- [x] O `bootstrap.sh` pergunta o hostname (seção 7): responder `fedora44-afpi-gnome` /
       `fedora44-afpi-kde`. `cat host_vars/127.0.0.1.yml` mostra o nome; `git status` não lista
       o `host_vars/`. Se o bootstrap já tinha rodado antes da seção 7: `git pull` e rodar de novo.
 - [x] Os facts batem com a etapa 0 (só as tasks `always`, sem mudar nada):
@@ -213,24 +213,26 @@ ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass 2>&1 | tee run1.l
 ### Etapa 4 — Conferência por role
 
 Nas duas VMs:
-- [ ] **Hostname:** `hostnamectl hostname` → o nome dado no bootstrap (`fedora44-afpi-gnome` /
+- [x] **Hostname:** `hostnamectl hostname` → o nome dado no bootstrap (`fedora44-afpi-gnome` /
       `fedora44-afpi-kde`), e o `System | Set System Hostname` deu `changed` no `run1.log`.
-- [ ] **Repos:** `dnf repo list --enabled` → `rpmfusion-free*`, `rpmfusion-nonfree*`, `brave-browser`,
+- [x] **Repos:** `dnf repo list --enabled` → `rpmfusion-free*`, `rpmfusion-nonfree*`, `brave-browser`,
       `code`, `gh-cli`; `dnf repo list --enabled | grep -i debug` → vazio.
-- [ ] **Multimídia:** `rpm -q ffmpeg` (e `ffmpeg-free` ausente). A GPU da VM (VMSVGA) não é
+- [x] **Multimídia:** `rpm -q ffmpeg` (e `ffmpeg-free` ausente). A GPU da VM (VMSVGA) não é
       Intel/AMD/NVIDIA: os drivers de vídeo são pulados.
-- [ ] **Apps:** `rpm -q chromium clamav steam VirtualBox brave-browser brave-origin code gh`;
+- [x] **Apps:** `rpm -q chromium clamav steam VirtualBox brave-browser brave-origin code gh`;
       `systemctl is-active clamav-freshclam`; `flatpak list --app` com os de `flatpak_apps_common`.
-- [ ] **Steam:** `~/.local/share/applications/steam.desktop` com o `Exec=env __NV_PRIME_...`.
-- [ ] **Shell:** `echo $SHELL` → zsh (novo login); tema `kali-like-alt`; `grep -A3 "API" ~/.zshrc`
+- [x] **Steam:** `~/.local/share/applications/steam.desktop` com o `Exec=env __NV_PRIME_...`.
+- [x] **Shell:** `echo $SHELL` → zsh (novo login); tema `kali-like-alt`; `grep -A3 "API" ~/.zshrc`
       com o conteúdo do vault; aliases presentes. Também para o root (`sudo -i`).
-- [ ] **GRUB:** `grep -E "GRUB_TIMEOUT|GRUB_GFXMODE" /etc/default/grub`;
+- [x] **GRUB:** `grep -E "GRUB_TIMEOUT|GRUB_GFXMODE" /etc/default/grub`;
       `sudo ls -l /boot/grub2/grub.cfg` com data da execução; menu no boot espera 5 s.
-- [ ] **Fontes:** `fc-list | grep -i -E "fira code|roboto"`.
-- [ ] **Cedilha** (após logout/login): no editor de texto e no Brave, `'` + `c` → `ç` (e `'` + `C` → `Ç`).
-- [ ] **AI tools:** `claude --version`; `agy --version`; `pipx list` com markitdown, notebooklm-py, pdf2docx.
+- [x] **Fontes:** `fc-list | grep -i -E "fira code|roboto"`.
+- [x] **Cedilha** (após logout/login): no editor de texto e no Brave, `'` + `c` → `ç` (e `'` + `C` → `Ç`).
+- [x] **AI tools:** `claude --version`; `agy --version`; `pipx list` com markitdown, notebooklm-py, pdf2docx.
 
-Só na GNOME:
+Verificado nas VMs (2026-10-02).
+
+Só na GNOME (pendente):
 - [ ] **Pacotes:** `rpm -q flatseal gnome-tweaks`; `flatpak list --app` também com os de
       `flatpak_apps_gnome` (VideoDownloader, ExtensionManager, Fragments).
 - [ ] **Ptyxis:** abre com 120x35, cursor sublinhado, Fira Code 10, opacidade 0.95
@@ -238,25 +240,26 @@ Só na GNOME:
 - [ ] Nenhuma task KDE rodou: no `run1.log`, `KDE |`, `Wayland |` e `Zoom |` aparecem como `skipping`.
 
 Só na KDE:
-- [ ] **Pacotes:** `rpm -q ktorrent plasma-sdk kde-gtk-config`; `flatpak list --app` também com o
+- [x] **Pacotes:** `rpm -q ktorrent plasma-sdk kde-gtk-config`; `flatpak list --app` também com o
       `com.markopejic.downloader`.
-- [ ] **Konsole:** `~/.local/share/konsole/kali-like-alt.{profile,colorscheme}` existem; no
+- [x] **Konsole:** `~/.local/share/konsole/kali-like-alt.{profile,colorscheme}` existem; no
       `~/.config/konsolerc`: `DefaultProfile=kali-like-alt.profile`, `RememberWindowSize=false`,
       `ExpandTabWidth=true`. Abrir o Konsole: perfil e cores aplicados, abas na largura toda.
-- [ ] **Overrides Flatpak:** `flatpak override --user --show com.bitwarden.desktop` → sockets
+- [x] **Overrides Flatpak:** `flatpak override --user --show com.bitwarden.desktop` → sockets
       `wayland;fallback-x11;!x11`, `XDG_CURRENT_DESKTOP=KDE`, `GTK_USE_PORTAL=1`, sem `GTK_IM_MODULE`;
       `flatpak override --user --show us.zoom.Zoom` → socket `wayland`, `XDG_CURRENT_DESKTOP=KDE`,
       `GTK_USE_PORTAL=1`, filesystem `!home`, sem `GTK_IM_MODULE`/`QT_IM_MODULE`.
-- [ ] **Cedilha nos Flatpaks:** `'` + `c` → `ç` no Bitwarden (Wayland nativo) e no Zoom (XWayland).
-- [ ] Nenhuma task GNOME rodou: no `run1.log`, `GNOME |` aparece como `skipping` (sem Ptyxis).
+- [x] **Cedilha nos Flatpaks:** `'` + `c` → `ç` no Bitwarden (Wayland nativo) e no Zoom (XWayland).
+- [x] Nenhuma task GNOME rodou: no `run1.log`, `GNOME |` aparece como `skipping` (sem Ptyxis).
+      Verificado na VM KDE (2026-10-02).
 
 ### Etapa 5 — Idempotência e `--check`
 ```bash
 ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass 2>&1 | tee run2.log
 ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass --check 2>&1 | tee check.log
 ```
-- [ ] Não para no reboot gate (nada novo desde o boot).
-- [ ] `changed=0`. Todas as tasks têm `creates`/`changed_when`/leitura antes e depois (Ptyxis,
+- [x] Não para no reboot gate (nada novo desde o boot).
+- [x] `changed=0`. Todas as tasks têm `creates`/`changed_when`/leitura antes e depois (Ptyxis,
       repos de debug), então qualquer `changed` aqui é bug: anotar a task e a VM.
       🔴 Achado na VM (2026-10-02): `ZSH | Add custom aliases to .zshrc` `changed` (root e usuário).
       Causa: o instalador do Antigravity (`agy install`, no passo "Configuring shell environment")
@@ -268,12 +271,14 @@ ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass --check 2>&1 | te
       `antigravity-ide` (root e usuário), 2ª `changed=0`. Nas VMs / no `noir`, a 1ª execução depois
       do `git pull` troca a linha uma vez (`changed`), depois `ok`. Repetir esta etapa.
       O AAPI tem o mesmo padrão (alias `antigravity`, Antigravity depois do bloco): levar para lá.
-- [ ] Nenhum `MOK | Request enrollment` nem aviso de MOK (chave já registrada).
-- [ ] `--check` com tudo instalado → `failed=0`. Anotar aqui cada task que falhar.
+- [x] Nenhum `MOK | Request enrollment` nem aviso de MOK (chave já registrada).
+- [x] `--check` com tudo instalado → `failed=0`. Anotar aqui cada task que falhar.
+      Etapa verificada nas VMs (2026-10-02), depois da correção do alias: `changed=0` e
+      `--check` sem falhas.
 
 ### Etapa 6 — Limpeza de kernels, reboot gate e rebuild do `vboxdrv` em outro kernel (só uma VM)
 O repo `updates` costuma ter só o kernel mais novo; o anterior vem do `fedora` ou do Koji
-(`dnf --showduplicates list kernel`).
+(`dnf list kernel --showduplicates`).
 - [ ] **Teste 1** — instalar um kernel anterior (`sudo dnf install kernel-<ver> kernel-devel-<ver>`),
       continuar no novo e rodar `--tags kernel` → sobra só o novo; repetir → sem mudança.
 - [ ] **Teste 2 (segurança)** — reinstalar o antigo (com `kernel-devel`), dar boot nele pelo GRUB
@@ -363,7 +368,8 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       mantém o salvo; máquina nova com Enter grava o hostname atual; sem tty só avisa;
       `ansible … -m debug -a var=system_hostname` → o nome com o `host_vars`, `""` sem ele; sem
       `host_vars` a task `System | Set System Hostname` é pulada; `git check-ignore` confirma.
-      Falta: aplicar o hostname de verdade (precisa de systemd) — nas VMs, seção 5, etapas 1 e 4.
+      Aplicado de verdade nas VMs (2026-10-02, seção 5, etapas 1 e 4): `hostnamectl hostname` →
+      o nome dado no bootstrap.
       No `noir`: rodar o `./bootstrap.sh` uma vez e responder `noir` (ou só Enter, que mantém o atual).
 
 ---
@@ -375,5 +381,5 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 3. ~~Handler do GRUB → assert de distro (seção 3)~~ — feito
 4. ~~Polimento de idempotência / `--check` (seção 4)~~ — feito (o `--check` geral ficou para as VMs)
 5. ~~README do reboot gate (seção 6)~~ — feito
-6. Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5, etapas 0–7) — **em andamento** (etapas 1–3 ok)
+6. Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5, etapas 0–7) — **em andamento** (etapas 1–5 ok; falta o bloco GNOME da etapa 4, e as etapas 6–7)
 7. NVIDIA no `noir` reinstalado com Secure Boot (seção 5, etapa 8), depois das VMs

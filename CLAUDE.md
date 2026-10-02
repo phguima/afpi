@@ -107,6 +107,8 @@ testado pelo usuário em duas VMs com Secure Boot, uma GNOME e outra KDE (roteir
 ## Particularidades do Fedora
 
 - `dnf` é o dnf5. O `dnf needs-restarting` vem do `dnf5-plugins` (o `dnf-plugins-core` é o dnf4).
+  Opções do comando vão **depois** do subcomando: `dnf list kernel --showduplicates`, não
+  `dnf --showduplicates list kernel` (sintaxe do dnf4).
   O `community.general.dnf_config_manager` usa a sintaxe do dnf4 (`--set-disabled`): aqui, usar
   `dnf config-manager setopt <repo>.enabled=0`.
 - O `mokutil` vem com qualquer instalação UEFI (dependência do `shim-x64`).
