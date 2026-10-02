@@ -258,6 +258,16 @@ ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass --check 2>&1 | te
 - [ ] Não para no reboot gate (nada novo desde o boot).
 - [ ] `changed=0`. Todas as tasks têm `creates`/`changed_when`/leitura antes e depois (Ptyxis,
       repos de debug), então qualquer `changed` aqui é bug: anotar a task e a VM.
+      🔴 Achado na VM (2026-10-02): `ZSH | Add custom aliases to .zshrc` `changed` (root e usuário).
+      Causa: o instalador do Antigravity (`agy install`, no passo "Configuring shell environment")
+      apaga qualquer `alias antigravity=` do `.zshrc`; ele rodava **depois** do bloco de aliases e
+      só na 1ª execução (`creates`), então a 2ª recolocava o alias. Corrigido: alias renomeado para
+      `antigravity-ide` (o `agy install` não mexe nele, nem rodando de novo) e a instalação do
+      Antigravity movida para antes do bloco. Validado em container `fedora:44` (`--tags shell`):
+      `agy install` sozinho apaga `antigravity` e mantém `antigravity-ide`; 1ª execução grava o
+      `antigravity-ide` (root e usuário), 2ª `changed=0`. Nas VMs / no `noir`, a 1ª execução depois
+      do `git pull` troca a linha uma vez (`changed`), depois `ok`. Repetir esta etapa.
+      O AAPI tem o mesmo padrão (alias `antigravity`, Antigravity depois do bloco): levar para lá.
 - [ ] Nenhum `MOK | Request enrollment` nem aviso de MOK (chave já registrada).
 - [ ] `--check` com tudo instalado → `failed=0`. Anotar aqui cada task que falhar.
 
