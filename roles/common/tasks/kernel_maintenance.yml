@@ -12,6 +12,7 @@
   register: installed_debug_kernels
   changed_when: false
   failed_when: false
+  check_mode: false
   tags: [system, kernel]
 
 - name: Kernel | Remove kernel debug packages
@@ -21,10 +22,21 @@
   when: installed_debug_kernels.stdout_lines | length > 0
   tags: [system, kernel]
 
-- name: Kernel | Disable debug repositories
-  ansible.builtin.shell: dnf config-manager setopt "*debug*".enabled=0
+# Only touch the debug repos that are actually enabled, so the task reports "changed" for real.
+# community.general.dnf_config_manager is not used: it speaks the dnf4 syntax (--set-disabled).
+- name: Kernel | Get enabled repositories
+  ansible.builtin.command: dnf repo list --enabled --json
+  register: enabled_repos
   changed_when: false
-  failed_when: false
+  check_mode: false
+  tags: [system, kernel]
+
+- name: Kernel | Disable debug repositories
+  ansible.builtin.command:
+    argv: "{{ ['dnf', 'config-manager', 'setopt'] + (enabled_debug_repos | map('regex_replace', '$', '.enabled=0') | list) }}"
+  vars:
+    enabled_debug_repos: "{{ enabled_repos.stdout | from_json | map(attribute='id') | select('search', 'debug') | list }}"
+  when: enabled_debug_repos | length > 0
   tags: [system, kernel]
 
 - name: Kernel | Get list of old kernels
@@ -33,6 +45,7 @@
   register: old_kernels_list
   changed_when: false
   failed_when: false
+  check_mode: false
   tags: [system, kernel]
 
 - name: Kernel | Remove old kernels

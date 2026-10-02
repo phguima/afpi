@@ -83,6 +83,7 @@
   register: gpu_info_raw
   changed_when: false
   failed_when: false
+  check_mode: false
   tags: [always, hardware]
 
 - name: Env Setup | Set GPU info fact
@@ -98,6 +99,7 @@
   register: nvidia_smi_check_raw
   failed_when: false
   changed_when: false
+  check_mode: false
   when: is_nvidia
   tags: [always, hardware, detection, nvidia]
 

@@ -88,17 +88,36 @@ Legenda: 🔴 funciona errado hoje · 🟠 robustez · 🟡 cosmético / polimen
 
 ## 4. Idempotência e `--check`
 
-- [ ] 🟡 **Repos de debug com `changed` real** (`roles/common/tasks/kernel_maintenance.yml`) — hoje
+- [x] 🟡 **Repos de debug com `changed` real** (`roles/common/tasks/kernel_maintenance.yml`) — hoje
       `dnf config-manager setopt "*debug*".enabled=0` roda sempre com `changed_when: false`. Listar os
       repos de debug habilitados e só desabilitar quando houver algum (`setopt <repo>.enabled=0`).
       **Não** usar `community.general.dnf_config_manager` como no AAPI: ele usa a sintaxe do dnf4
       (`--set-disabled`), e o Fedora é dnf5.
-- [ ] 🟡 **Ptyxis com `changed` real** (`roles/desktop/tasks/main.yml`) — port direto do AAPI
+      Feito (2026-10-02) com `dnf repo list --enabled --json` (ids com `debug`) + um único
+      `dnf config-manager setopt <id>.enabled=0 …` só quando a lista não está vazia. Validado em
+      container `fedora:44` (`site.yml --tags kernel`) com `fedora-debuginfo`/`updates-debuginfo`
+      ligados: 1ª execução `changed` e os dois desligados; 2ª pula a task; `--check` lê a lista real
+      (o `setopt` em si aparece como `skipping` no `--check`, como todo `command`).
+- [x] 🟡 **Ptyxis com `changed` real** (`roles/desktop/tasks/main.yml`) — port direto do AAPI
       (`fe622db`): ler o valor antes/depois de `gsettings set` / `dconf write` e só imprimir `changed`
       se mudou (3 tasks: tamanho/comportamento, cursor/fonte, opacidade).
-- [ ] 🟡 **`check_mode: false` nas leituras** — `lspci` (`env_setup`), `repoquery`
+      Validado (2026-10-02) em container `fedora:44` com `ptyxis` instalado, usuário comum com D-Bus
+      de sessão, `XDG_CURRENT_DESKTOP=GNOME` e o playbook via `sudo` (`--tags ptyxis`, UUID de
+      perfil semeado no dconf): 1ª `changed=3`; 2ª `changed=0`; mudando `default-columns` e a
+      opacidade à mão, só esses 2 itens voltam (`changed=2`); 4ª `changed=0`. Valores conferidos no
+      `dconf dump`. Abrir o Ptyxis de fato fica para um host GNOME.
+- [x] 🟡 **`check_mode: false` nas leituras** — `lspci` (`env_setup`), `repoquery`
       (`kernel_maintenance`), `nvidia-smi` (`nvidia`), `needs-restarting` (`update`), para o
       `--check` ter facts reais.
+      Feito (2026-10-02): `lspci` e `nvidia-smi` (`env_setup`), `nvidia-smi` (`nvidia`), os 2
+      `repoquery` e a lista de repos (`kernel_maintenance`); `needs-restarting` já tinha. Também nas
+      duas leituras do `desktop` cujo `stdout` a task seguinte usa (UUID do perfil do Ptyxis e
+      arquivo de compose da cedilha): sem isso a task pulada no `--check` deixava o `stdout`
+      indefinido. Conferido em container: no `--check` essas leituras rodam (`ok`, não `skipping`).
+      O `--check` geral com tudo instalado ficou para as VMs (seção 5, etapa 5): no container a
+      execução completa esbarra em limitações dele (sem systemd, `hostnamectl`, `/etc/default/grub`),
+      e numa máquina limpa o `--check` falha por desenho (ex.: o template do oh-my-zsh não existe
+      porque a instalação foi só simulada).
 
 ## 5. Validação
 
@@ -130,6 +149,6 @@ Testes **nunca** rodam no host (`noir`), nem só leitura / `--check`: só em con
 1. ~~`is_secure_boot` → MOK idempotente → reboot gate (seção 1)~~ — feito
 2. ~~Enroll akmods compartilhado → `mok_password` (seção 2)~~ — feito
 3. ~~Handler do GRUB → assert de distro (seção 3)~~ — feito
-4. Polimento de idempotência / `--check` (seção 4) — **próximo** (~30–45 min, a maior parte em testes)
+4. ~~Polimento de idempotência / `--check` (seção 4)~~ — feito (o `--check` geral ficou para as VMs)
 5. README do reboot gate (seção 6)
 6. Validação na VM com Secure Boot (seção 5), quando o usuário tiver a VM
