@@ -319,6 +319,18 @@ driver (com o driver já funcionando, o bloco do role `nvidia` é pulado) e, com
 a chave akmods **compartilhada de verdade** entre NVIDIA (role `nvidia`, 1º a importar) e
 VirtualBox (role `apps`, 2º), que só foi visto em container. Fazer depois das VMs.
 
+> **Retomar daqui (2026-10-02).** O `noir` é um ASUS TUF Gaming F15, híbrido (Intel + RTX 3050,
+> **Ampere**). O usuário vai reinstalar o Fedora do zero e rodar o playbook **com tudo**: driver,
+> Vulkan, VA-API/NVENC e o `/etc/modprobe.d/nvidia.conf` (`DynamicPowerManagement=0x02`, S0ix,
+> `TemporaryFilePath`), que agora entram já na 2ª execução (ver abaixo). Problema conhecido:
+> em instalações anteriores, **com** esse `nvidia.conf`, a dGPU ficava sempre ativa. Sem ele,
+> o padrão do driver (`0x03`) já liga o RTD3 em notebooks Ampere, então o arquivo talvez nem seja
+> necessário. Plano: conferir o item "dGPU dormindo (RTD3)" e, se a GPU não suspender, ajustar
+> **removendo do role** o que atrapalhar (o `nvidia.conf` inteiro ou a linha culpada, testando uma
+> por vez; suspeitos também: `supergfxd`, processos presos na GPU). Cada ajuste: mudar no repo,
+> testar em container, rodar no `noir`, reiniciar e conferir de novo. Registrar aqui o que for
+> descoberto.
+
 Antes de reinstalar:
 - [ ] Backup: `group_vars/all/secrets.yml` + senha do vault, `~/.ssh`, `~/.gnupg`, `~/.claude`,
       `~/wks` (repos com tudo commitado/pushado), perfis de navegador e o que mais for local.
@@ -333,25 +345,37 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 - [ ] **1ª execução** → para no reboot gate. Reiniciar.
 - [ ] **2ª execução**: o role `nvidia` gera a chave (`MOK | Generate akmods signing key pair`),
       faz **um** `MOK | Request enrollment` e mostra o aviso de MOK; instala o driver, espera o
-      build do akmods, roda `akmods --force` e `dracut`, e pede reboot. Mais adiante, a importação
-      do `akmods_mok` pelo `apps` (VirtualBox) **não** gera chave nem import (`ok`/`skipping`).
-      Termina com `failed=0`. `sudo ls -l /etc/pki/akmods/certs/` → um `.der` + o symlink.
+      build do akmods, roda `akmods --force` e `dracut`, e pede reboot. Na mesma execução, o
+      `hardware` instala Vulkan e VA-API/NVENC (`nvidia_vulkan_packages`,
+      `nvidia_multimedia_packages`) e grava `/etc/modprobe.d/nvidia.conf`. Antes essas três tasks
+      dependiam do `has_nvidia_driver` (falso até o reboot) e ficavam para uma 3ª execução, que
+      deixou de existir (validado em container em 2026-10-02: com `has_nvidia_driver: false` as três
+      rodam; 2ª execução e `--check` com `changed=0`). Se o `noir` for ASUS (`is_asus`): COPR `asus-linux`,
+      `asusctl`/`supergfxctl`, `supergfxd` ativo e o autostart do ROG Control Center. Mais adiante,
+      a importação do `akmods_mok` pelo `apps` (VirtualBox) **não** gera chave nem import
+      (`ok`/`skipping`). Termina com `failed=0`. `sudo ls -l /etc/pki/akmods/certs/` → um `.der` +
+      o symlink.
 - [ ] Reboot → MokManager → **Enroll MOK** → senha `fedora-afpi` → Reboot.
 - [ ] `nvidia-smi` funciona; `modinfo -F signer nvidia` e `modinfo -F signer vboxdrv` → o mesmo
       signer (a chave única); `lsmod | grep -E "^nvidia|vboxdrv"`;
       `sudo mokutil --test-key /etc/pki/akmods/certs/public_key.der` → "already enrolled".
 - [ ] PRIME: com `mesa-demos`, `glxinfo -B | grep renderer` → Intel e
       `nvidia-run glxinfo -B | grep renderer` → NVIDIA (alias do `.zshrc`).
-- [ ] **3ª execução**: agora com `has_nvidia_driver`, o `hardware` instala Vulkan e VA-API/NVENC
-      (`nvidia_vulkan_packages`, `nvidia_multimedia_packages`) e grava `/etc/modprobe.d/nvidia.conf`
-      (power management); o bloco de instalação do `nvidia` é pulado. Se o `noir` for ASUS
-      (`is_asus`): COPR `asus-linux`, `asusctl`/`supergfxctl`, `supergfxd` ativo e o autostart do
-      ROG Control Center.
-- [ ] Reboot (para o `nvidia.conf` valer): `cat /sys/module/nvidia/parameters/DynamicPowerManagement`
-      → `2`; suspender e voltar sem travar (o troubleshooting do README fala de freezes).
+- [ ] **dGPU dormindo (RTD3)**: `cat /sys/module/nvidia/parameters/DynamicPowerManagement` → `2`
+      (do `nvidia.conf`). Com a GPU ociosa (nada no `nvidia-smi`; o próprio `nvidia-smi` acorda a
+      GPU, esperar uns segundos depois dele): `cat /proc/driver/nvidia/gpus/*/power` →
+      `Runtime D3 status: Enabled (fine-grained)` e
+      `cat /sys/bus/pci/devices/<endereço do lspci>/power/runtime_status` → `suspended`;
+      `supergfxctl -g` → `Hybrid`. Suspender e voltar sem travar.
+      **Atenção:** em instalações anteriores, com este `nvidia.conf`, a dGPU do `noir` (RTX 3050,
+      Ampere) ficava **sempre ativa**. Sem ele vale o padrão do driver (`0x03`), que já liga o RTD3
+      em notebooks Ampere. Se ficar `active`: remover o `nvidia.conf` do role (ou isolar a linha
+      culpada, testando uma de cada vez) e repetir a conferência.
+      No `noir` atual o driver foi instalado antes dessa mudança, sem as três tasks: a próxima
+      execução as aplica; depois reiniciar e conferir.
 - [ ] Steam: `~/.local/share/applications/steam.desktop` com o `__NV_PRIME_...` e o jogo/launcher
       aparecendo no `nvidia-smi`.
-- [ ] **4ª execução**: `changed=0`, sem aviso de MOK nem de reboot; depois `--check` → `failed=0`.
+- [ ] **3ª execução**: `changed=0`, sem aviso de MOK nem de reboot; depois `--check` → `failed=0`.
 - [ ] Na próxima atualização de kernel de verdade: depois do reboot, `modinfo -F signer nvidia`
       no kernel novo (o `akmods` recompila e assina no boot) e `nvidia-smi` funcionando.
 - [ ] Decidir se o `noir` fica com Secure Boot ligado ou volta a desligar (os módulos assinados

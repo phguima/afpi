@@ -2,7 +2,8 @@
 
 AFPI (Ansible Fedora Post-Install): playbook Ansible que configura uma workstation Fedora (41–44)
 depois da instalação. Repo `phguima/afpi`, branch única `main`. A máquina-alvo é a máquina pessoal
-do usuário (hostname `noir`, Fedora 44, **Secure Boot desligado**). O usuário conversa em português.
+do usuário (hostname `noir`: ASUS TUF Gaming F15, híbrido Intel + NVIDIA RTX 3050 (Ampere), Fedora 44,
+**Secure Boot desligado** até a reinstalação da etapa 8 do `TODO.md`). O usuário conversa em português.
 
 O **AAPI** (`phguima/aapi`, em `../aapi` no workspace original) é o port deste projeto para
 AlmaLinux 10 (máquina do trabalho). Várias melhorias de arquitetura nasceram lá e estão sendo
@@ -13,6 +14,10 @@ trazidas para cá. Ao portar algo do AAPI, adaptar o que é do EL10 (dnf4, EPEL/
 `TODO.md` (em português) é a lista de tarefas e o histórico: cada item marcado traz como foi
 validado e o que ainda falta. **Ler antes de começar.** Ao concluir um item, marcar `[x]` com uma
 nota de validação no mesmo commit.
+
+Em andamento (2026-10-02): **etapa 8 da seção 5** (NVIDIA no `noir` reinstalado). Ler o bloco
+"Retomar daqui" dessa etapa: o `nvidia.conf` de power management já deixou a dGPU sempre ativa no
+`noir`, e o plano é instalar tudo e remover do role o que impedir a GPU de suspender.
 
 ## Estrutura
 

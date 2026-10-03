@@ -27,18 +27,21 @@
 #  when: is_nvidia and has_nvidia_driver
 #  tags: [hardware, power]
 
+# Gated on is_nvidia only, not has_nvidia_driver: the nvidia role runs first and installs the
+# driver packages in this same run, while has_nvidia_driver (nvidia-smi in pre_tasks) is still false
+# until the reboot. Everything below takes effect on that reboot, so no extra run is needed.
 - name: NVIDIA | Install NVIDIA Vulkan support
   ansible.builtin.dnf:
     name: "{{ nvidia_vulkan_packages }}"
     state: present
-  when: is_nvidia and has_nvidia_driver
+  when: is_nvidia
   tags: [hardware, multimedia]
 
 - name: Hardware | Install NVIDIA VA-API and NVENC/NVDEC support
   ansible.builtin.dnf:
     name: "{{ nvidia_multimedia_packages }}"
     state: present
-  when: is_nvidia and has_nvidia_driver
+  when: is_nvidia
   tags: [software, multimedia]
 
 - name: Hardware | Configure NVIDIA Power Management
@@ -54,7 +57,7 @@
     owner: root
     group: root
     mode: '0644'
-  when: is_nvidia and has_nvidia_driver
+  when: is_nvidia
   tags: [hardware, power]
 
   # --- ASUS ROG Installation ---

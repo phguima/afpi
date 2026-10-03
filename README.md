@@ -77,8 +77,7 @@ ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass
 There is no special workflow anymore: keep running the same command and reboot whenever it asks.
 
 1. **Run** → stops at the reboot gate after the upgrade. **Reboot.**
-2. **Run** → installs the NVIDIA driver and, with Secure Boot on, queues the akmods signing key for enrollment. **Reboot**, choose **Enroll MOK** in the blue MokManager screen and type `mok_password` (`group_vars/all/all.yml`).
-3. **Run** once more → with the driver loaded (`nvidia-smi` works), the `hardware` role adds Vulkan and VA-API/NVENC support.
+2. **Run** → installs the NVIDIA driver, Vulkan, VA-API/NVENC and the power management settings (`/etc/modprobe.d/nvidia.conf`) and, with Secure Boot on, queues the akmods signing key for enrollment. **Reboot**, choose **Enroll MOK** in the blue MokManager screen and type `mok_password` (`group_vars/all/all.yml`). After this reboot the driver is loaded (`nvidia-smi` works) and everything is active: no third run is needed.
 
 Without Secure Boot, step 2 has no MokManager screen, but the reboot is still needed to load the driver. Machines without an NVIDIA GPU that install VirtualBox go through the same MOK enrollment in step 2.
 

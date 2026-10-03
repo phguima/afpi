@@ -66,6 +66,7 @@
         msg:
           - "=================================================="
           - "A system REBOOT is REQUIRED to load the NVIDIA driver."
+          - "No extra run needed: Vulkan, VA-API and power settings are installed in this run."
           - "=================================================="
   when:
     - is_nvidia_present
