@@ -93,12 +93,14 @@
 # --- Antigravity CLI ---
 # Runs before the aliases block: its shell setup ('agy install') deletes any 'alias antigravity=...'
 # from .zshrc (that is why ours is named antigravity-ide), so .zshrc is settled before the block.
-- name: Antigravity | Install Antigravity CLI for users
+# Only for the user who runs the playbook: root has no workspace or agycli alias to use it with.
+- name: Antigravity | Install Antigravity CLI for the user
   ansible.builtin.shell:
     cmd: "curl -fsSL {{ antigravity_install_script_url }} | bash"
     creates: "{{ item.home }}/.local/bin/agy"
   become_user: "{{ item.name }}"
   loop: "{{ zsh_users }}"
+  when: item.name == user_name
   tags: [shell, antigravity]
 
 # Root gets only the common aliases; the user who runs the playbook also gets zsh_aliases_user.
