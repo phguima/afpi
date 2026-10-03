@@ -389,7 +389,7 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       `sudo mokutil --test-key /etc/pki/akmods/certs/public_key.der` → "already enrolled".
 - [ ] PRIME: com `mesa-demos`, `glxinfo -B | grep renderer` → Intel e
       `nvidia-run glxinfo -B | grep renderer` → NVIDIA (alias do `.zshrc`).
-- [ ] **dGPU dormindo (RTD3)**: `grep DynamicPowerManagement: /proc/driver/nvidia/params` → `2` (o driver 615 não expõe
+- [x] **dGPU dormindo (RTD3)**: `grep DynamicPowerManagement: /proc/driver/nvidia/params` → `2` (o driver 615 não expõe
       `/sys/module/nvidia/parameters/`)
       (do `nvidia.conf`). Com a GPU ociosa (nada no `nvidia-smi`; o próprio `nvidia-smi` acorda a
       GPU, esperar uns segundos depois dele): `cat /proc/driver/nvidia/gpus/*/power` →
@@ -402,6 +402,16 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       culpada, testando uma de cada vez) e repetir a conferência.
       No `noir` atual o driver foi instalado antes dessa mudança, sem as três tasks: a próxima
       execução as aplica; depois reiniciar e conferir.
+      **Validado (2026-10-03), menos a suspensão:** com o `nvidia.conf` de volta e o widget do
+      Plasma lendo só a Intel (`gpu/gpu1/usage`; o `plasma-setup.sh` do `linux-scripts` agora
+      escolhe a integrada em híbridos, commit `7cd1609`), depois do reboot:
+      `DynamicPowerManagement: 2`, `EnableS0ixPowerManagement: 1`, `Runtime D3 status: Enabled
+      (fine-grained)`, `Video Memory: Off`, `runtime_status` → `suspended`, nenhum `nvidia-smi`
+      rodando, `supergfxctl -g` → `Hybrid`. O role fica como está (o `nvidia.conf` não era o
+      problema; ver o achado no "Retomar daqui").
+      Suspensão validada (2026-10-03): `systemctl suspend` em `s2idle` (S0ix), ~20 s, `PM: suspend
+      exit` sem erro de `nvidia`/`NVRM`/`i915`; `nvidia-suspend`/`nvidia-resume` pulados por
+      `exec-condition` (normal com a GPU em D3); dGPU de novo `suspended` depois de voltar.
 - [ ] Steam: `~/.local/share/applications/steam.desktop` com o `__NV_PRIME_...` e o jogo/launcher
       aparecendo no `nvidia-smi`.
 - [ ] **3ª execução**: `changed=0`, sem aviso de MOK nem de reboot; depois `--check` → `failed=0`.
@@ -441,6 +451,19 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       Aplicado de verdade nas VMs (2026-10-02, seção 5, etapas 1 e 4): `hostnamectl hostname` →
       o nome dado no bootstrap.
       No `noir`: rodar o `./bootstrap.sh` uma vez e responder `noir` (ou só Enter, que mantém o atual).
+
+## 8. Identidade do git e login do `gh` (a conversar)
+
+- [ ] 🟡 Decidir se o AFPI configura o `~/.gitconfig` (`user.name`, `user.email` e talvez
+      `init.defaultBranch=main`, `pull.ff=only`). No `noir` reinstalado (2026-10-02) não havia
+      identidade e o primeiro commit falhou. **O AFPI também é usado por outras pessoas**, então
+      nada de nome/e-mail do Pedro fixo no `all.yml`. Opções levantadas:
+      vault (descartado de início: o e-mail já é público nos commits, o `secrets.yml` hoje só tem
+      `api_keys` e os testes em container o apagam); variáveis vazias no `all.yml` com a task pulada
+      quando vazias; ou perguntar no `bootstrap.sh` e gravar em `host_vars/127.0.0.1.yml` (fora do
+      git), como já é feito com o hostname (seção 7).
+      O login do `gh` é interativo (token no keyring): no máximo um lembrete no fim do playbook ou
+      no README (`gh auth login --git-protocol https --web` + `gh auth setup-git`).
 
 ---
 
