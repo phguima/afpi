@@ -180,7 +180,7 @@ zsh_aliases: |
   alias close-thevoid="udisksctl unmount -b /dev/mapper/luks-ad99f7e6-cf3a-4581-9c46-de99119b00d4; udisksctl lock -b /dev/nvme1n1p3"
   alias clean-cache="sudo sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
   alias nvidia-run="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0"
-  alias full-update="flatpak update -y; sudo npm update -g; sudo dnf upgrade --refresh -y"
+  alias full-update="flatpak update -y; sudo npm update -g; sudo dnf upgrade --refresh -y; dnf needs-restarting"
 
 # PTYxis Settings
 ptyxis_restore_window_size: "false"
