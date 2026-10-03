@@ -18,7 +18,8 @@ nota de validação no mesmo commit.
 
 Em andamento (2026-10-02): **etapa 8 da seção 5** (NVIDIA no `noir` reinstalado). Ler o bloco
 "Retomar daqui" dessa etapa: o `nvidia.conf` de power management já deixou a dGPU sempre ativa no
-`noir`, e o plano é instalar tudo e remover do role o que impedir a GPU de suspender.
+`noir`, e o plano é instalar tudo e remover do role o que impedir a GPU de suspender. O passo a
+passo do primeiro boot está em `NOIR_REINSTALL.md` (temporário: apagar ao fim da etapa 8).
 
 ## Estrutura
 
