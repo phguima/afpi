@@ -3,7 +3,8 @@
 AFPI (Ansible Fedora Post-Install): playbook Ansible que configura uma workstation Fedora (41–44)
 depois da instalação. Repo `phguima/afpi`, branch única `main`. A máquina-alvo é a máquina pessoal
 do usuário (hostname `noir`: ASUS TUF Gaming F15, híbrido Intel + NVIDIA RTX 3050 (Ampere), Fedora 44,
-**Secure Boot desligado** até a reinstalação da etapa 8 do `TODO.md`). O usuário conversa em português.
+**Secure Boot sempre ligado**: decisão do usuário, nunca desligar nem sugerir desligar). O usuário
+conversa em português.
 
 O **AAPI** (`phguima/aapi`, em `../aapi` no workspace original) é o port deste projeto para
 AlmaLinux 10 (máquina do trabalho). Várias melhorias de arquitetura nasceram lá e estão sendo

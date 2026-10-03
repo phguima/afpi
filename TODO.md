@@ -378,8 +378,10 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 - [ ] **3ª execução**: `changed=0`, sem aviso de MOK nem de reboot; depois `--check` → `failed=0`.
 - [ ] Na próxima atualização de kernel de verdade: depois do reboot, `modinfo -F signer nvidia`
       no kernel novo (o `akmods` recompila e assina no boot) e `nvidia-smi` funcionando.
-- [ ] Decidir se o `noir` fica com Secure Boot ligado ou volta a desligar (os módulos assinados
-      carregam nos dois casos) e atualizar o `CLAUDE.md` ("Secure Boot desligado").
+- [x] Decidir se o `noir` fica com Secure Boot ligado ou volta a desligar. Decidido (2026-10-02):
+      **sempre ligado**, nunca desativar. O `CLAUDE.md` foi atualizado. Consequência: a chave
+      akmods e o enroll do MOK precisam funcionar sempre no `noir`. Ajustes de power management não
+      podem passar por desligar o Secure Boot.
 
 ## 6. Documentação
 
