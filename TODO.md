@@ -356,22 +356,28 @@ VirtualBox (role `apps`, 2º), que só foi visto em container. Fazer depois das 
 > (`gpu/all/*`, `gpu/gpuN/*` da dGPU, `nvtop`, MangoHud etc.) se a GPU deve dormir.
 
 Antes de reinstalar:
-- [ ] Backup: `group_vars/all/secrets.yml` + senha do vault, `~/.ssh`, `~/.gnupg`, `~/.claude`,
+- [x] Backup: `group_vars/all/secrets.yml` + senha do vault, `~/.ssh`, `~/.gnupg`, `~/.claude`,
       `~/wks` (repos com tudo commitado/pushado), perfis de navegador e o que mais for local.
-- [ ] **Segundo disco (`thevoid`, LUKS em `/dev/nvme1n1p3`, ver `zsh_aliases`):** no instalador,
+- [x] **Segundo disco (`thevoid`, LUKS em `/dev/nvme1n1p3`, ver `zsh_aliases`):** no instalador,
       selecionar **só** o disco do sistema. Não formatar nem montar o `nvme1n1`.
       O `noir` também tem **dual boot com Windows**: não apagar as partições dele (nem a EFI
       compartilhada) ao reinstalar.
-- [ ] Firmware: ligar o Secure Boot (chaves padrão de fábrica) e deixar a GPU em modo
+      Feito (2026-10-03): o usuário **removeu o `thevoid` por escolha** na reinstalação. O Fedora
+      ficou no `nvme1n1` (`p1` `/boot`, `p2` LUKS com o btrfs); o `nvme1n1p3` (91,5 GB) ficou sem
+      sistema de arquivos e o UUID `luks-ad99f7e6-…` dos aliases `open-thevoid`/`close-thevoid`
+      não existe mais. O Windows (`nvme0n1`: EFI, BitLocker, recuperação, MYASUS) ficou intacto.
+      Os aliases ficam no `all.yml`: o usuário pretende voltar a usar o `thevoid`. Ao recriá-lo,
+      um LUKS novo terá **outro UUID** (e talvez outra partição): atualizar os dois aliases.
+- [x] Firmware: ligar o Secure Boot (chaves padrão de fábrica) e deixar a GPU em modo
       **Hybrid**, para a tela seguir pela Intel enquanto o `nvidia` não carrega.
-- [ ] Instalar o Fedora 44 com a edição usada no `noir`; `mokutil --sb-state` → `SecureBoot enabled`.
+- [x] Instalar o Fedora 44 com a edição usada no `noir`; `mokutil --sb-state` → `SecureBoot enabled`.
       Com o Windows no disco, o instalador deixa o RTC em hora local: antes do playbook,
       `sudo timedatectl set-local-rtc 0` (e o `RealTimeIsUniversal` no Windows; ver o achado acima).
 
 Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
-- [ ] `./bootstrap.sh` → hostname `noir`.
-- [ ] **1ª execução** → para no reboot gate. Reiniciar.
-- [ ] **2ª execução**: o role `nvidia` gera a chave (`MOK | Generate akmods signing key pair`),
+- [x] `./bootstrap.sh` → hostname `noir`.
+- [x] **1ª execução** → para no reboot gate. Reiniciar.
+- [x] **2ª execução**: o role `nvidia` gera a chave (`MOK | Generate akmods signing key pair`),
       faz **um** `MOK | Request enrollment` e mostra o aviso de MOK; instala o driver, espera o
       build do akmods, roda `akmods --force` e `dracut`, e pede reboot. Na mesma execução, o
       `hardware` instala Vulkan e VA-API/NVENC (`nvidia_vulkan_packages`,
@@ -383,12 +389,18 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       a importação do `akmods_mok` pelo `apps` (VirtualBox) **não** gera chave nem import
       (`ok`/`skipping`). Termina com `failed=0`. `sudo ls -l /etc/pki/akmods/certs/` → um `.der` +
       o symlink.
-- [ ] Reboot → MokManager → **Enroll MOK** → senha `fedora-afpi` → Reboot.
-- [ ] `nvidia-smi` funciona; `modinfo -F signer nvidia` e `modinfo -F signer vboxdrv` → o mesmo
+- [x] Reboot → MokManager → **Enroll MOK** → senha `fedora-afpi` → Reboot.
+- [x] `nvidia-smi` funciona; `modinfo -F signer nvidia` e `modinfo -F signer vboxdrv` → o mesmo
       signer (a chave única); `lsmod | grep -E "^nvidia|vboxdrv"`;
       `sudo mokutil --test-key /etc/pki/akmods/certs/public_key.der` → "already enrolled".
-- [ ] PRIME: com `mesa-demos`, `glxinfo -B | grep renderer` → Intel e
-      `nvidia-run glxinfo -B | grep renderer` → NVIDIA (alias do `.zshrc`).
+      Validado pelo usuário no `noir` (2026-10-03): bootstrap, 1ª execução parando no reboot gate,
+      2ª execução (chave única, um enroll, driver, Vulkan, VA-API e `nvidia.conf` na mesma execução),
+      enroll no MokManager e as conferências de `nvidia-smi`, signer, `lsmod` e `mokutil` acima.
+- [x] PRIME: `glxinfo -B | grep renderer` → Intel e
+      `nvidia-run glxinfo -B | grep renderer` → NVIDIA (alias do `.zshrc`). O `glxinfo` vem do
+      `glx-utils`, já instalado (não precisa do `mesa-demos`).
+      Validado (2026-10-03): `Mesa Intel(R) Iris(R) Xe Graphics (ADL GT2)` e
+      `NVIDIA GeForce RTX 3050 Laptop GPU/PCIe/SSE2`; a dGPU volta a `suspended` uns 20 s depois.
 - [x] **dGPU dormindo (RTD3)**: `grep DynamicPowerManagement: /proc/driver/nvidia/params` → `2` (o driver 615 não expõe
       `/sys/module/nvidia/parameters/`)
       (do `nvidia.conf`). Com a GPU ociosa (nada no `nvidia-smi`; o próprio `nvidia-smi` acorda a
@@ -412,9 +424,20 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       Suspensão validada (2026-10-03): `systemctl suspend` em `s2idle` (S0ix), ~20 s, `PM: suspend
       exit` sem erro de `nvidia`/`NVRM`/`i915`; `nvidia-suspend`/`nvidia-resume` pulados por
       `exec-condition` (normal com a GPU em D3); dGPU de novo `suspended` depois de voltar.
-- [ ] Steam: `~/.local/share/applications/steam.desktop` com o `__NV_PRIME_...` e o jogo/launcher
+- [x] Steam: `~/.local/share/applications/steam.desktop` com o `__NV_PRIME_...` e o jogo/launcher
       aparecendo no `nvidia-smi`.
-- [ ] **3ª execução**: `changed=0`, sem aviso de MOK nem de reboot; depois `--check` → `failed=0`.
+      Validado (2026-10-03): todas as linhas `Exec` do `steam.desktop` com `env __NV_PRIME_...`;
+      os processos `steam`/`steamwebhelper` com `__NV_PRIME_RENDER_OFFLOAD=1` no ambiente e
+      descritores abertos em `/dev/nvidia*`; dGPU `active` com o Steam aberto. O `nvidia-smi` só
+      lista o `kwin_wayland`: o Steam roda no container do pressure-vessel (outro PID namespace),
+      então conferir pelo `/proc/<pid>/fd`, não pelo `nvidia-smi`. Os jogos herdam o ambiente.
+- [x] **3ª execução**: `changed=0`, sem aviso de MOK nem de reboot; depois `--check` → `failed=0`.
+      Validado (2026-10-03) no `noir`: uma tentativa parou no reboot gate (o `openssl-libs` foi
+      atualizado logo depois do boot; `ok=22`, `changed=0`), o que está certo. Depois do reboot:
+      `ok=92 changed=1 failed=0 skipped=29`; o único `changed` foi `ZSH | Add custom aliases to
+      .zshrc` do **root**, porque o `full-update` mudou (6d4f9e3) e o `/root/.zshrc` tinha o bloco
+      antigo (o do `phgl` já tinha sido editado à mão). Execução seguinte `changed=0` e `--check`
+      `failed=0` (conferido pelo usuário).
 - [ ] Na próxima atualização de kernel de verdade: depois do reboot, `modinfo -F signer nvidia`
       no kernel novo (o `akmods` recompila e assina no boot) e `nvidia-smi` funcionando.
 - [x] Decidir se o `noir` fica com Secure Boot ligado ou volta a desligar. Decidido (2026-10-02):
@@ -475,4 +498,4 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 4. ~~Polimento de idempotência / `--check` (seção 4)~~ — feito (o `--check` geral ficou para as VMs)
 5. ~~README do reboot gate (seção 6)~~ — feito
 6. ~~Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5, etapas 0–7)~~ — feito
-7. NVIDIA no `noir` reinstalado com Secure Boot (seção 5, etapa 8), depois das VMs
+7. ~~NVIDIA no `noir` reinstalado com Secure Boot (seção 5, etapa 8)~~ — feito (falta só conferir no próximo kernel)
