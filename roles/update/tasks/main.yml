@@ -51,8 +51,21 @@
   check_mode: false
   tags: [update]
 
+# needs-restarting compares install times with the boot time that systemd reports, which is wrong
+# when the RTC keeps local time (dual boot with Windows): on noir it put the boot after the kernel
+# upgrade and returned 0. Comparing the running kernel with the newest installed one needs no clock.
+- name: System | Find the newest installed kernel
+  ansible.builtin.shell: rpm -qa kernel-core --qf '%{VERSION}-%{RELEASE}.%{ARCH}\n' | sort -V | tail -n 1
+  register: newest_kernel
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  tags: [update]
+
 - name: System | Stop until the system is rebooted
-  when: reboot_hint.rc == 1
+  when: >-
+    reboot_hint.rc == 1 or
+    (newest_kernel.stdout | length > 0 and newest_kernel.stdout != ansible_facts['kernel'])
   tags: [update]
   block:
     - name: System | Ask for a reboot

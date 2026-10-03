@@ -330,15 +330,33 @@ VirtualBox (role `apps`, 2º), que só foi visto em container. Fazer depois das 
 > por vez; suspeitos também: `supergfxd`, processos presos na GPU). Cada ajuste: mudar no repo,
 > testar em container, rodar no `noir`, reiniciar e conferir de novo. Registrar aqui o que for
 > descoberto.
+>
+> **Achado (2026-10-02): reboot gate não parou no `noir`.** A 1ª execução instalou o kernel 7.2.8
+> (21:27) com o 7.2.5 rodando (boot às 21:22), e o `dnf needs-restarting -r` respondeu rc 0. Causa:
+> o `noir` tem **dual boot com Windows** e o RTC em hora local (`RTC in local TZ: yes`). O systemd
+> registrou o boot com horários errados (`UserspaceTimestamp` 18:22, `UnitsLoadStartTimestamp` 22:22),
+> e o dnf5 (5.4.6) usa o `UnitsLoadStartTimestamp`, que ficou depois da instalação do kernel. Nas VMs e
+> no Dell o RTC é UTC. Correções: (1) no playbook, o gate também compara `uname -r` com o
+> `kernel-core` mais novo (validado em container: kernel mais novo instalado + `needs-restarting`
+> rc 0 → para; kernel atual = mais novo → passa; sem `kernel-core` → passa); (2) no `noir`, opção A
+> escolhida pelo usuário: RTC em UTC nos dois sistemas, no Windows com
+> `reg add "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /t REG_DWORD /d 1 /f`
+> e no Fedora com `sudo timedatectl set-local-rtc 0`. Conferir depois: `timedatectl` → `RTC in
+> local TZ: no`, a hora certa no Windows e, no Fedora, `systemctl show -p UnitsLoadStartTimestamp`
+> igual ao `uptime -s`. Nada no playbook força o RTC em UTC, porque isso desacertaria o Windows.
 
 Antes de reinstalar:
 - [ ] Backup: `group_vars/all/secrets.yml` + senha do vault, `~/.ssh`, `~/.gnupg`, `~/.claude`,
       `~/wks` (repos com tudo commitado/pushado), perfis de navegador e o que mais for local.
 - [ ] **Segundo disco (`thevoid`, LUKS em `/dev/nvme1n1p3`, ver `zsh_aliases`):** no instalador,
       selecionar **só** o disco do sistema. Não formatar nem montar o `nvme1n1`.
+      O `noir` também tem **dual boot com Windows**: não apagar as partições dele (nem a EFI
+      compartilhada) ao reinstalar.
 - [ ] Firmware: ligar o Secure Boot (chaves padrão de fábrica) e deixar a GPU em modo
       **Hybrid**, para a tela seguir pela Intel enquanto o `nvidia` não carrega.
 - [ ] Instalar o Fedora 44 com a edição usada no `noir`; `mokutil --sb-state` → `SecureBoot enabled`.
+      Com o Windows no disco, o instalador deixa o RTC em hora local: antes do playbook,
+      `sudo timedatectl set-local-rtc 0` (e o `RealTimeIsUniversal` no Windows; ver o achado acima).
 
 Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 - [ ] `./bootstrap.sh` → hostname `noir`.

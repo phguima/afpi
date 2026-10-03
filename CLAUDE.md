@@ -3,8 +3,8 @@
 AFPI (Ansible Fedora Post-Install): playbook Ansible que configura uma workstation Fedora (41–44)
 depois da instalação. Repo `phguima/afpi`, branch única `main`. A máquina-alvo é a máquina pessoal
 do usuário (hostname `noir`: ASUS TUF Gaming F15, híbrido Intel + NVIDIA RTX 3050 (Ampere), Fedora 44,
-**Secure Boot sempre ligado**: decisão do usuário, nunca desligar nem sugerir desligar). O usuário
-conversa em português.
+**Secure Boot sempre ligado**: decisão do usuário, nunca desligar nem sugerir desligar; **dual boot com
+Windows**, além do disco `thevoid`). O usuário conversa em português.
 
 O **AAPI** (`phguima/aapi`, em `../aapi` no workspace original) é o port deste projeto para
 AlmaLinux 10 (máquina do trabalho). Várias melhorias de arquitetura nasceram lá e estão sendo
@@ -29,8 +29,12 @@ Em andamento (2026-10-02): **etapa 8 da seção 5** (NVIDIA no `noir` reinstalad
 - `roles/akmods_mok`: chave de assinatura akmods + enroll MOK (só com Secure Boot). Não está no
   `site.yml`: é importado (`import_role`) pelo `nvidia` e pelo `apps` antes dos pacotes akmod
   (driver NVIDIA, VirtualBox do RPM Fusion). Idempotente: importar duas vezes não faz nada.
-- `roles/update` termina com um **reboot gate**: `dnf needs-restarting -r` → rc 1 encerra o play
-  pedindo reboot (`meta: end_host`). Numa máquina nova a 1ª execução quase sempre para ali.
+- `roles/update` termina com um **reboot gate**: `dnf needs-restarting -r` → rc 1, **ou** kernel em
+  execução diferente do `kernel-core` mais novo, encerra o play pedindo reboot (`meta: end_host`).
+  Numa máquina nova a 1ª execução quase sempre para ali. A comparação de kernels existe porque o
+  `needs-restarting` usa a hora de boot do systemd, errada com o RTC em hora local (dual boot com
+  Windows): no `noir` ele deu rc 0 logo depois de instalar um kernel novo. Não criar task que force o
+  RTC em UTC: em dual boot, isso desacerta o relógio do Windows.
 - `group_vars/all/all.yml`: todas as variáveis, inclusive `mok_password`. O `system_hostname` fica
   vazio (= não mexe): o hostname é perguntado pelo `bootstrap.sh` e gravado em
   `host_vars/127.0.0.1.yml` (no `.gitignore`, por máquina), que vence o `group_vars`. Nada no

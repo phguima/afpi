@@ -68,7 +68,7 @@ ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass
 ```
 
 > [!IMPORTANT]
-> **Reboot gate:** right after the system upgrade, the `update` role checks `dnf needs-restarting -r`. If the upgrade requires a reboot (new kernel or core libraries), the playbook **stops there** with a message: reboot and run the **same command** again. The second run passes the gate and applies the rest of the setup. On a freshly installed machine the first run almost always stops at the gate.
+> **Reboot gate:** right after the system upgrade, the `update` role checks `dnf needs-restarting -r` and whether the running kernel is the newest one installed (that check does not depend on the clock, which matters on dual-boot machines whose hardware clock keeps local time). If the upgrade requires a reboot (new kernel or core libraries), the playbook **stops there** with a message: reboot and run the **same command** again. The second run passes the gate and applies the rest of the setup. On a freshly installed machine the first run almost always stops at the gate.
 >
 > This keeps the akmod-built modules (NVIDIA driver, VirtualBox) compiled for the kernel that is actually running, and lets kernel cleanup remove the old one.
 
