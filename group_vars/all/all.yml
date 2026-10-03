@@ -168,17 +168,22 @@ antigravity_install_script_url: "https://antigravity.google/cli/install.sh"
 claude_install_script_url: "https://claude.ai/install.sh"
 
 # Zsh Aliases
-zsh_aliases: |
+# zsh_aliases_common goes to every .zshrc the playbook manages, root included. zsh_aliases_user
+# only to the user who runs the playbook: workspace, desktop, GPU and update shortcuts that make no
+# sense for root.
+zsh_aliases_common: |
   alias zshconfig="nano ~/.zshrc"
   alias ohmyzsh="nano ~/.oh-my-zsh"
   alias lls="ls --color -lh --group-directories-first"
   alias llsa="ls --color -lha --group-directories-first"
+  alias clean-cache="sudo sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
+
+zsh_aliases_user: |
   alias claudecli="cd ~/wks; clear; claude"
   alias agycli="cd ~/wks; clear; agy"
   alias antigravity-ide="cd ~/wks/tools/antigravity; ./antigravity"
   alias open-thevoid="udisksctl unlock -b /dev/nvme1n1p3; udisksctl mount -b /dev/mapper/luks-ad99f7e6-cf3a-4581-9c46-de99119b00d4"
   alias close-thevoid="udisksctl unmount -b /dev/mapper/luks-ad99f7e6-cf3a-4581-9c46-de99119b00d4; udisksctl lock -b /dev/nvme1n1p3"
-  alias clean-cache="sudo sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
   alias nvidia-run="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0"
   alias full-update="flatpak update -y; sudo npm update -g; sudo dnf upgrade --refresh -y; dnf needs-restarting"
 

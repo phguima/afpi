@@ -101,15 +101,18 @@
   loop: "{{ zsh_users }}"
   tags: [shell, antigravity]
 
+# Root gets only the common aliases; the user who runs the playbook also gets zsh_aliases_user.
 - name: ZSH | Add custom aliases to .zshrc
   ansible.builtin.blockinfile:
     path: "{{ item.home }}/.zshrc"
     marker: "# {mark} ANSIBLE MANAGED ALIASES"
-    block: "{{ zsh_aliases }}"
+    block: "{{ zsh_aliases_common }}{{ zsh_aliases_user if item.name == user_name else '' }}"
     owner: "{{ item.name }}"
   loop: "{{ zsh_users }}"
   tags: [shell, omz, aliases]
 
+# Only for the user who runs the playbook: root does not use the API keys and has no business
+# keeping secrets from the vault in its .zshrc.
 - name: ZSH | Add NVIDIA and API key placeholders to .zshrc
   ansible.builtin.blockinfile:
     path: "{{ item.home }}/.zshrc"
@@ -126,6 +129,18 @@
     owner: "{{ item.name }}"
     mode: '0644'
   loop: "{{ zsh_users }}"
+  when: item.name == user_name
+  no_log: true
+  tags: [shell, setup]
+
+# Older runs wrote this block (API keys included) to root's .zshrc as well: remove it.
+- name: ZSH | Remove NVIDIA and API key block from other users' .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ item.home }}/.zshrc"
+    marker: "# {mark} NVIDIA AND API CONFIGURATION"
+    state: absent
+  loop: "{{ zsh_users }}"
+  when: item.name != user_name
   tags: [shell, setup]
 
 # --- GRUB ---
