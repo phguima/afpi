@@ -19,7 +19,7 @@ nota de validação no mesmo commit.
 Etapa 8 da seção 5 (NVIDIA no `noir` reinstalado) concluída em 2026-10-03, menos a conferência
 na próxima atualização de kernel de verdade (o `akmods` recompila e assina no boot). Os achados
 dessa etapa (reboot gate com RTC em hora local, dGPU acordada pelo widget de GPU do Plasma) estão
-no bloco "Retomar daqui" dela. Item em aberto para conversar: seção 8 (identidade do git e `gh`).
+no bloco "Retomar daqui" dela. Seção 8 (identidade do git e `gh`) implementada; falta aplicar no `noir`.
 
 ## Estrutura
 
@@ -36,9 +36,10 @@ no bloco "Retomar daqui" dela. Item em aberto para conversar: seção 8 (identid
   `needs-restarting` usa a hora de boot do systemd, errada com o RTC em hora local (dual boot com
   Windows): no `noir` ele deu rc 0 logo depois de instalar um kernel novo. Não criar task que force o
   RTC em UTC: em dual boot, isso desacerta o relógio do Windows.
-- `group_vars/all/all.yml`: todas as variáveis, inclusive `mok_password`. O `system_hostname` fica
-  vazio (= não mexe): o hostname é perguntado pelo `bootstrap.sh` e gravado em
-  `host_vars/127.0.0.1.yml` (no `.gitignore`, por máquina), que vence o `group_vars`. Nada no
+- `group_vars/all/all.yml`: todas as variáveis, inclusive `mok_password`. O `system_hostname` e a
+  identidade do git (`git_user_name`, `git_user_email`) ficam vazios (= não mexe): o `bootstrap.sh`
+  pergunta e grava em `host_vars/127.0.0.1.yml` (no `.gitignore`, por máquina), que vence o
+  `group_vars`. Nada pessoal fixo no repo: **o AFPI também é usado por outras pessoas**. Nada no
   playbook pede input durante a execução: perguntas vão para o `bootstrap.sh`.
 - `group_vars/all/secrets.yml`: **Ansible Vault**, só com `api_keys`. O Claude não tem a senha do
   vault: não tentar abrir; pedir ao usuário quando precisar mexer. Os arquivos de

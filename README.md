@@ -39,6 +39,7 @@ AFPI features a comprehensive tagging system that allows you to run specific par
 | **Maintenance** | `update`, `cleanup`, `grub` | System upgrades, DNF optimization, kernel cleanup, and GRUB tuning. |
 | **Hardware** | `nvidia`, `drivers`, `power`, `asus` | GPU drivers, power management, and ASUS-specific tools. |
 | **Shell** | `shell`, `zsh`, `omz`, `aliases` | ZSH installation, Oh-My-Zsh theme, and custom aliases. |
+| **Git** | `git` | Git identity (from `bootstrap.sh`) and defaults in the user's `~/.gitconfig`. |
 | **Desktop** | `desktop`, `fonts`, `cedilla` | Terminal profiles, fonts, and the universal cedilla fix. |
 | **Software** | `apps`, `software`, `dnf`, `flatpak` | Application installation via DNF or Flatpak. |
 | **AI** | `ai`, `claude`, `gemini`, `extensions`, `python` | Claude Code, Gemini CLI, extensions, and AI-related Python libraries. |
@@ -59,7 +60,10 @@ Prepare the Ansible environment:
 ```bash
 ./bootstrap.sh
 ```
-It also asks for the machine's **hostname** (Enter keeps the current one) and saves it to `host_vars/127.0.0.1.yml`, which is git-ignored and overrides `system_hostname` from `group_vars/all/all.yml`. The playbook applies it without stopping to ask; with no answer saved, the hostname is left untouched. Run `./bootstrap.sh` again to change it.
+It also asks for this machine's settings and saves them to `host_vars/127.0.0.1.yml`, which is git-ignored and overrides `group_vars/all/all.yml`. The playbook applies them without stopping to ask. Run `./bootstrap.sh` again to change them.
+
+*   **Hostname** (Enter keeps the current one). With no answer saved, the hostname is left untouched.
+*   **Git `user.name` and `user.email`** (Enter keeps the saved value or the one already in `~/.gitconfig`; empty skips them). The playbook writes them to your `~/.gitconfig`, together with `init.defaultBranch=main` and `pull.ff=only` (`git_config_defaults` in `all.yml`, tag `git`).
 
 ### 2. Run the Playbook
 Apply the full configuration (the provided `ansible.cfg` is optimized for faster deployment):
@@ -72,7 +76,14 @@ ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass
 >
 > This keeps the akmod-built modules (NVIDIA driver, VirtualBox) compiled for the kernel that is actually running, and lets kernel cleanup remove the old one.
 
-### 3. NVIDIA and Secure Boot
+### 3. GitHub CLI login
+The playbook installs `gh` but cannot log in for you (it opens the browser and keeps the token in the keyring). At the end of each run it reminds you while you are not logged in. As your user:
+```bash
+gh auth login --hostname github.com --git-protocol https --web
+gh auth setup-git
+```
+
+### 4. NVIDIA and Secure Boot
 
 There is no special workflow anymore: keep running the same command and reboot whenever it asks.
 

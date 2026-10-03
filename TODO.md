@@ -475,18 +475,40 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       o nome dado no bootstrap.
       No `noir`: rodar o `./bootstrap.sh` uma vez e responder `noir` (ou só Enter, que mantém o atual).
 
-## 8. Identidade do git e login do `gh` (a conversar)
+## 8. Identidade do git e login do `gh`
 
-- [ ] 🟡 Decidir se o AFPI configura o `~/.gitconfig` (`user.name`, `user.email` e talvez
-      `init.defaultBranch=main`, `pull.ff=only`). No `noir` reinstalado (2026-10-02) não havia
+- [x] 🟡 O AFPI configura o `~/.gitconfig` do usuário. No `noir` reinstalado (2026-10-02) não havia
       identidade e o primeiro commit falhou. **O AFPI também é usado por outras pessoas**, então
-      nada de nome/e-mail do Pedro fixo no `all.yml`. Opções levantadas:
-      vault (descartado de início: o e-mail já é público nos commits, o `secrets.yml` hoje só tem
-      `api_keys` e os testes em container o apagam); variáveis vazias no `all.yml` com a task pulada
-      quando vazias; ou perguntar no `bootstrap.sh` e gravar em `host_vars/127.0.0.1.yml` (fora do
-      git), como já é feito com o hostname (seção 7).
-      O login do `gh` é interativo (token no keyring): no máximo um lembrete no fim do playbook ou
-      no README (`gh auth login --git-protocol https --web` + `gh auth setup-git`).
+      nada de nome/e-mail fixo no repo. Decidido (2026-10-03):
+      - O `bootstrap.sh` pergunta `user.name` e `user.email` (Enter mantém o valor salvo ou o do
+        `~/.gitconfig`; vazio = não mexe; e-mail validado) e grava em `host_vars/127.0.0.1.yml`,
+        junto com o hostname (seção 7). O arquivo agora é lido e escrito com PyYAML, por causa de
+        nomes com aspas. O vault foi descartado: o e-mail já é público nos commits.
+      - `all.yml`: `git_user_name`/`git_user_email` vazios e `git_config_defaults`
+        (`init.defaultBranch=main`, `pull.ff=only`). Role `common`, tag `git`: `git_config` no
+        `{{ user_home }}/.gitconfig` como o usuário; identidade pulada quando vazia.
+      - `gh`: login interativo (navegador + keyring), então só um lembrete no fim do `site.yml`
+        quando o `~/.config/gh/hosts.yml` não tem `github.com:` (ler o arquivo não precisa da sessão
+        D-Bus do usuário, o `gh auth status` via sudo precisaria). README: seção "GitHub CLI login".
+      Validado (2026-10-03) em container `fedora:44` (`script` para simular o terminal): bootstrap
+      recusa e-mail inválido, grava `Ana "Q" O'Brien` e a 2ª execução com Enter mantém tudo;
+      `--check` antes relata as mudanças; 1ª execução grava `~/.gitconfig` do usuário (dono dele;
+      `/root/.gitconfig` não criado; o git lê o nome com aspas certo), 2ª execução e `--check` com
+      `changed=0`; identidade vazia → só os padrões; lembrete aparece sem `hosts.yml` e com
+      `hosts.yml` vazio (depois de logout), some com `github.com:`; `shellcheck` limpo.
+- [ ] **VM (usuário):** conferir a seção 8 de verdade numa VM Fedora 44:
+      - `./bootstrap.sh` numa VM sem `~/.gitconfig`: pergunta hostname, nome e e-mail (e-mail
+        inválido é recusado); `cat host_vars/127.0.0.1.yml` com os três valores. 2ª execução só com
+        Enter mantém tudo.
+      - Playbook completo (ou `--tags git`): `git config --global --list` → `user.name`,
+        `user.email`, `init.defaultBranch=main`, `pull.ff=only`; `ls -l ~/.gitconfig` com o usuário
+        como dono; `sudo ls /root/.gitconfig` → não existe. 2ª execução `changed=0`.
+      - Sem login no `gh`: o fim do play mostra `GitHub CLI | Remind to log in`. Depois de
+        `gh auth login … --web` + `gh auth setup-git`, a próxima execução não mostra mais o lembrete
+        e `git ls-remote https://github.com/<user>/<repo>` funciona.
+      - Bootstrap deixando nome e e-mail vazios: o playbook aplica só os dois padrões.
+- [ ] **`noir`:** `./bootstrap.sh` (Enter mantém o hostname; a identidade vem do `~/.gitconfig`) e
+      depois `--tags git`: deve mudar só os dois padrões; a seguinte `changed=0`, sem lembrete do `gh`.
 
 ---
 
