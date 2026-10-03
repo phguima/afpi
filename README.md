@@ -9,9 +9,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.6.0
-*   **Last Update:** September 23, 2026
-*   **Latest Improvement:** Claude Code installed via the official native installer in the `ai_tools` role (new `claude` tag).
+*   **Current Version:** 2.7.0
+*   **Last Update:** October 3, 2026
+*   **Latest Improvement:** Secure Boot ready NVIDIA/VirtualBox setup: one shared akmods signing key enrolled once via MOK, a reboot gate that stops the play when an update needs a restart, and the NVIDIA driver, Vulkan, VA-API and power settings applied in a single run.
 *   **Stability:** Production-ready for Fedora 41, 42, 43, and 44.
 
 ## 🏗️ Architecture and Roles
