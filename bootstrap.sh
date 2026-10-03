@@ -45,36 +45,70 @@ if [ ! -f "group_vars/all/all.yml" ]; then
     exit 1
 fi
 
-# 4. Hostname
-# Asked here, not in the playbook, so ansible-playbook never stops for input. The answer goes to
+# 4. Machine settings: hostname and git identity
+# Asked here, not in the playbook, so ansible-playbook never stops for input. The answers go to
 # host_vars/127.0.0.1.yml (git-ignored, machine-specific), which overrides group_vars/all.
+# The file is read and written with PyYAML (installed with Ansible) so names with quotes survive.
 HOST_VARS="host_vars/127.0.0.1.yml"
-current_hostname=$(hostnamectl hostname 2>/dev/null || true)
-current_hostname="${current_hostname:-$HOSTNAME}"
-if [ -f "$HOST_VARS" ]; then
-    saved_hostname=$(sed -n 's/^system_hostname: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' "$HOST_VARS")
-fi
-default_hostname="${saved_hostname:-$current_hostname}"
 
+# Prints the value of key $1 saved in $HOST_VARS (empty when missing)
+host_var() {
+    [ -f "$HOST_VARS" ] || return 0
+    python3 -c 'import sys, yaml; v = (yaml.safe_load(open(sys.argv[1])) or {}).get(sys.argv[2]); print(v if v is not None else "")' \
+        "$HOST_VARS" "$1"
+}
+
+# ask VAR "Label" default: reads into VAR, Enter keeps the default
+ask() {
+    local answer
+    read -r -p "$(echo -e "${C_BLUE}==>${C_RESET} $2 [$3]: ")" answer
+    printf -v "$1" '%s' "${answer:-$3}"
+}
+
+new_hostname="" git_name="" git_email=""  # set by ask()
 if [ -t 0 ]; then
+    current_hostname=$(hostnamectl hostname 2>/dev/null || true)
+    current_hostname="${current_hostname:-$HOSTNAME}"
+    saved_hostname=$(host_var system_hostname)
     while true; do
-        read -r -p "$(echo -e "${C_BLUE}==>${C_RESET} Hostname [${default_hostname}]: ")" new_hostname
-        new_hostname="${new_hostname:-$default_hostname}"
+        ask new_hostname "Hostname" "${saved_hostname:-$current_hostname}"
         # RFC 1123 label: letters, digits and '-', 1-63 chars, no leading/trailing '-'
         if [[ "$new_hostname" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$ ]]; then
             break
         fi
         error "Invalid hostname '${new_hostname}': use letters, digits and '-' (max 63 chars)."
     done
+
+    # Git identity: defaults to what was saved before, then to the current ~/.gitconfig.
+    # Leaving both empty means the playbook does not touch user.name/user.email.
+    saved_git_name=$(host_var git_user_name)
+    saved_git_email=$(host_var git_user_email)
+    ask git_name "Git user.name (empty to skip)" "${saved_git_name:-$(git config --global user.name 2>/dev/null || true)}"
+    while true; do
+        ask git_email "Git user.email (empty to skip)" "${saved_git_email:-$(git config --global user.email 2>/dev/null || true)}"
+        if [ -z "$git_email" ] || [[ "$git_email" =~ ^[^[:space:]@]+@[^[:space:]@]+$ ]]; then
+            break
+        fi
+        error "Invalid e-mail '${git_email}'."
+    done
+
     mkdir -p host_vars
-    cat > "$HOST_VARS" <<EOF
----
-# Written by bootstrap.sh: settings for this machine only (not tracked by git).
-system_hostname: "${new_hostname}"
-EOF
+    python3 - "$HOST_VARS" "$new_hostname" "$git_name" "$git_email" <<'PY'
+import sys, yaml
+path, hostname, name, email = sys.argv[1:]
+with open(path, "w") as f:
+    f.write("---\n# Written by bootstrap.sh: settings for this machine only (not tracked by git).\n")
+    yaml.safe_dump({"system_hostname": hostname, "git_user_name": name, "git_user_email": email},
+                   f, sort_keys=False, allow_unicode=True, default_flow_style=False)
+PY
     success "Hostname '${new_hostname}' saved to ${HOST_VARS} (applied by the playbook)."
+    if [ -n "$git_name" ] || [ -n "$git_email" ]; then
+        success "Git identity '${git_name} <${git_email}>' saved to ${HOST_VARS}."
+    else
+        warn "No git identity saved: the playbook leaves user.name/user.email as they are."
+    fi
 else
-    warn "No terminal: hostname not asked. The playbook keeps it as is unless ${HOST_VARS} sets it."
+    warn "No terminal: hostname and git identity not asked. The playbook uses ${HOST_VARS} if it exists."
 fi
 
 # 5. Vault Check
