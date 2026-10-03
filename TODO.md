@@ -344,6 +344,16 @@ VirtualBox (role `apps`, 2º), que só foi visto em container. Fazer depois das 
 > e no Fedora com `sudo timedatectl set-local-rtc 0`. Conferir depois: `timedatectl` → `RTC in
 > local TZ: no`, a hora certa no Windows e, no Fedora, `systemctl show -p UnitsLoadStartTimestamp`
 > igual ao `uptime -s`. Nada no playbook força o RTC em UTC, porque isso desacertaria o Windows.
+>
+> **Achado (2026-10-02): a dGPU sempre ativa não era o `nvidia.conf`.** No `noir` reinstalado, com o
+> arquivo, `/proc/driver/nvidia/gpus/*/power` dizia `Runtime D3 status: Enabled (fine-grained)` e a
+> GPU (`0000:01:00.0`) seguia `active`. Sem o arquivo (`DynamicPowerManagement: 3`, S0ix 0), também
+> `active`. Culpado: o `ksystemstats` (sensores do Plasma) mantinha `nvidia-smi dmon -d 2 -s pucm`
+> rodando, que consulta a GPU a cada 2 s, porque o widget "Monitor do Sistema" da área de trabalho
+> mostrava `gpu/all/usage`. Matando só o `dmon`, a GPU foi para `suspended` em menos de 10 s. O
+> `kwin_wayland` aparece no `nvidia-smi` (contexto C+G de 6 MiB, por causa da HDMI ligada à NVIDIA),
+> mas **não** impede o RTD3 fine-grained. Ou seja: nenhum widget/monitor pode ler sensores da NVIDIA
+> (`gpu/all/*`, `gpu/gpuN/*` da dGPU, `nvtop`, MangoHud etc.) se a GPU deve dormir.
 
 Antes de reinstalar:
 - [ ] Backup: `group_vars/all/secrets.yml` + senha do vault, `~/.ssh`, `~/.gnupg`, `~/.claude`,
@@ -379,7 +389,8 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       `sudo mokutil --test-key /etc/pki/akmods/certs/public_key.der` → "already enrolled".
 - [ ] PRIME: com `mesa-demos`, `glxinfo -B | grep renderer` → Intel e
       `nvidia-run glxinfo -B | grep renderer` → NVIDIA (alias do `.zshrc`).
-- [ ] **dGPU dormindo (RTD3)**: `cat /sys/module/nvidia/parameters/DynamicPowerManagement` → `2`
+- [ ] **dGPU dormindo (RTD3)**: `grep DynamicPowerManagement: /proc/driver/nvidia/params` → `2` (o driver 615 não expõe
+      `/sys/module/nvidia/parameters/`)
       (do `nvidia.conf`). Com a GPU ociosa (nada no `nvidia-smi`; o próprio `nvidia-smi` acorda a
       GPU, esperar uns segundos depois dele): `cat /proc/driver/nvidia/gpus/*/power` →
       `Runtime D3 status: Enabled (fine-grained)` e
