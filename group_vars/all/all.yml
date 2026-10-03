@@ -111,6 +111,7 @@ dnf_packages_kde:
 flatpak_apps_common:
   - com.bitwarden.desktop
   - com.dec05eba.gpu_screen_recorder
+  - com.rtosta.zapzap
   - com.slack.Slack
   - com.spotify.Client
   - net.displaycal.DisplayCAL
