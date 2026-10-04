@@ -12,14 +12,11 @@ trazidas para cá. Ao portar algo do AAPI, adaptar o que é do EL10 (dnf4, EPEL/
 
 ## Estado do trabalho
 
-`TODO.md` (em português) é a lista de tarefas e o histórico: cada item marcado traz como foi
-validado e o que ainda falta. **Ler antes de começar.** Ao concluir um item, marcar `[x]` com uma
-nota de validação no mesmo commit.
-
-Etapa 8 da seção 5 (NVIDIA no `noir` reinstalado) concluída em 2026-10-03, menos a conferência
-na próxima atualização de kernel de verdade (o `akmods` recompila e assina no boot). Os achados
-dessa etapa (reboot gate com RTC em hora local, dGPU acordada pelo widget de GPU do Plasma) estão
-no bloco "Retomar daqui" dela. Seção 8 (identidade do git e `gh`) concluída e validada na VM e no `noir` em 2026-10-04.
+`TODO.md` (em português) tem **só o que falta**. **Ler antes de começar.** O histórico (itens
+feitos, achados como o reboot gate com RTC em hora local e a dGPU acordada pelo widget de GPU do
+Plasma, e como cada item foi validado) foi tirado dele em 2026-10-04 e fica no git:
+`git show aa885a2:TODO.md`. Ao concluir um item, removê-lo do `TODO.md` e registrar a validação na
+mensagem do commit; tarefa nova entra no `TODO.md` até ser feita.
 
 ## Estrutura
 
@@ -115,7 +112,7 @@ Receitas que funcionaram (imagem `registry.fedoraproject.org/fedora:44`):
 
 O que depende de hardware (enroll real no MokManager, módulos carregando, reboot de verdade) é
 testado pelo usuário em duas VMs com Secure Boot, uma GNOME e outra KDE (roteiro na seção 5 do
-`TODO.md`). Deixar no `TODO.md` o que falta conferir lá.
+`TODO.md` histórico, `git show aa885a2:TODO.md`). Deixar no `TODO.md` o que falta conferir lá.
 
 ## Particularidades do Fedora
 
