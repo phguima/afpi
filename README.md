@@ -9,9 +9,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.7.0
-*   **Last Update:** October 3, 2026
-*   **Latest Improvement:** Secure Boot ready NVIDIA/VirtualBox setup: one shared akmods signing key enrolled once via MOK, a reboot gate that stops the play when an update needs a restart, and the NVIDIA driver, Vulkan, VA-API and power settings applied in a single run.
+*   **Current Version:** 2.8.0
+*   **Last Update:** October 4, 2026
+*   **Latest Improvement:** Git identity asked once by `bootstrap.sh` and applied to the user's `~/.gitconfig`, a GitHub CLI login reminder at the end of the run, a menu entry for the Antigravity IDE, and a leaner root `.zshrc` (generic aliases only, no API keys, no Antigravity CLI).
 *   **Stability:** Production-ready for Fedora 41, 42, 43, and 44.
 
 ## 🏗️ Architecture and Roles
@@ -22,7 +22,7 @@ The project is organized to isolate responsibilities, ensuring idempotency and e
 *   **`nvidia`**: GPU detection and Secure Boot-ready driver installation (signed akmods build, initramfs).
 *   **`akmods_mok`**: Secure Boot signing key for akmods-built modules (NVIDIA, VirtualBox): generated once, enrolled via `mokutil` only when not already enrolled or pending. Imported by `nvidia` and `apps` before their akmod packages are installed.
 *   **`hardware`**: Post-driver GPU setup (NVIDIA Vulkan, VA-API/NVENC and power management; Intel and AMD acceleration), multimedia codecs, and ASUS ROG support.
-*   **`common`**: Hostname, Flathub, kernel cleanup, GRUB tuning (timeout, resolution, regenerated automatically when changed), the Antigravity CLI, and **Zero-Config ZSH** setup (Oh-My-Zsh with Kali-like theme and self-managed plugins).
+*   **`common`**: Hostname, Flathub, kernel cleanup, GRUB tuning (timeout, resolution, regenerated automatically when changed), Git identity and defaults, the Antigravity CLI (user only), and **Zero-Config ZSH** setup (Oh-My-Zsh with Kali-like theme and self-managed plugins).
 *   **`desktop`**: 
     *   **Universal Cedilla (ç) Fix**: Uses a `~/.XCompose` mapping (System) plus Flatpak overrides. Browsers, Bitwarden and Antigravity run on native Wayland with no extra fix; Zoom is the exception and always runs on XWayland (it hardcodes xcb), where the cedilla also works.
     *   **Terminal**: Konsole and PTYxis profile management.
@@ -41,7 +41,7 @@ AFPI features a comprehensive tagging system that allows you to run specific par
 | **Shell** | `shell`, `zsh`, `omz`, `aliases` | ZSH installation, Oh-My-Zsh theme, and custom aliases. |
 | **Git** | `git` | Git identity (from `bootstrap.sh`) and defaults in the user's `~/.gitconfig`. |
 | **Desktop** | `desktop`, `fonts`, `cedilla` | Terminal profiles, fonts, and the universal cedilla fix. |
-| **Software** | `apps`, `software`, `dnf`, `flatpak` | Application installation via DNF or Flatpak. |
+| **Software** | `apps`, `software`, `dnf`, `flatpak`, `shortcuts` | Application installation via DNF or Flatpak, and menu entries (Steam on the NVIDIA GPU, Antigravity IDE). |
 | **AI** | `ai`, `claude`, `gemini`, `extensions`, `python` | Claude Code, Gemini CLI, extensions, and AI-related Python libraries. |
 
 ## 🔐 Secrets Management (Ansible Vault)
