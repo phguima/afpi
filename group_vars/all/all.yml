@@ -171,6 +171,9 @@ omz_plugins:
 
 # Antigravity CLI settings
 antigravity_install_script_url: "https://antigravity.google/cli/install.sh"
+# Antigravity IDE: not installed by the playbook (manual tarball extract). When the binary is found
+# here, the 'apps' role adds a menu entry for it; otherwise those tasks are skipped.
+antigravity_ide_dir: "{{ user_home }}/wks/tools/antigravity"
 
 # Claude Code settings
 claude_install_script_url: "https://claude.ai/install.sh"

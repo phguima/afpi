@@ -512,6 +512,24 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       depois `--tags git`: deve mudar só os dois padrões; a seguinte `changed=0`, sem lembrete do `gh`.
       Validado pelo usuário (2026-10-04).
 
+## 9. Atalho no menu para o Antigravity IDE
+
+- [x] O Antigravity IDE é um tarball extraído à mão em `~/wks/tools/antigravity`, sem `.desktop`:
+      só abria pelo alias `antigravity-ide`. Implementado (2026-10-04) no role `apps` (tags
+      `shortcuts`, `antigravity`): `antigravity_ide_dir` no `all.yml`; se o binário existe, extrai o
+      `icon.png` de dentro do `resources/app.asar` (`roles/apps/files/extract_asar_file.py`, sem Node)
+      para `~/.local/share/icons/hicolor/512x512/apps/antigravity.png` e grava
+      `~/.local/share/applications/antigravity.desktop` (`StartupWMClass=antigravity`, o `name` do
+      `package.json`). Sem a IDE, as tasks são puladas.
+      Validado (2026-10-04) em container `fedora:44` com a pasta real da IDE montada: `--check` antes
+      relata as mudanças; 1ª execução cria o ícone (PNG 512×512) e o `.desktop` (dono o usuário,
+      `desktop-file-validate` sem erros); 2ª execução e `--check` com `changed=0`; sem a IDE, tudo
+      `skipping`.
+- [x] **`noir`:** `--tags shortcuts`: o Antigravity aparece no menu com o ícone, abre pelo menu e a
+      janela aberta fica agrupada no mesmo ícone da dock/barra de tarefas (se aparecer um ícone
+      genérico separado, conferir o `app_id` da janela e ajustar o `StartupWMClass`).
+      Validado pelo usuário (2026-10-04).
+
 ---
 
 ## Ordem sugerida
@@ -524,3 +542,4 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 6. ~~Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5, etapas 0–7)~~ — feito
 7. ~~NVIDIA no `noir` reinstalado com Secure Boot (seção 5, etapa 8)~~ — feito (falta só conferir no próximo kernel)
 8. ~~Identidade do git e lembrete do `gh` (seção 8)~~ — feito
+9. ~~Atalho do Antigravity IDE (seção 9)~~ — feito
