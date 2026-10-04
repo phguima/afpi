@@ -27,7 +27,7 @@ The project is organized to isolate responsibilities, ensuring idempotency and e
     *   **Universal Cedilla (ç) Fix**: Uses a `~/.XCompose` mapping (System) plus Flatpak overrides. Browsers, Bitwarden and Antigravity run on native Wayland with no extra fix; Zoom is the exception and always runs on XWayland (it hardcodes xcb), where the cedilla also works.
     *   **Terminal**: Konsole and PTYxis profile management.
 
-*   **`apps`**: Complete suite via DNF and Flatpak, featuring GPU automation for Steam, **VirtualBox group management (vboxusers/vboxsf)**, and productivity tools (Brave, VS Code, GitHub CLI). Adds a menu entry (icon included) for the Antigravity IDE when it is found in `antigravity_ide_dir`.
+*   **`apps`**: Complete suite via DNF and Flatpak, featuring GPU automation for Steam, **VirtualBox group management (vboxusers/vboxsf)**, and productivity tools (Brave, VS Code, GitHub CLI). Installs the **Antigravity IDE** (latest official AppImage, checksum-verified; the app keeps itself updated afterwards) in `antigravity_ide_dir` and adds its menu entry (`antigravity_ide_install: false` skips the download).
 *   **`ai_tools`**: Integration of the AI ecosystem (Claude Code via the official native installer, Gemini CLI and extensions) and specialized Python libraries via `pipx`.
 
 ## 🏷️ Granular Control (Tags)

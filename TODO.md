@@ -542,6 +542,43 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       com o caminho completo, 2ª execução `changed=0`, pasta do shell intacta) e pelo usuário no
       `noir` (a IDE abre fora da própria pasta).
 
+## 10. Antigravity IDE instalado pelo playbook (AppImage)
+
+- [x] Achado (2026-10-04): o `~/wks/tools/antigravity/antigravity` do `noir` já era o **AppImage**
+      oficial 2.19.1 (SHA-512 igual ao do manifesto); o resto da pasta (`resources/app.asar` 2.0.1,
+      `.pak`, `locales/`…) é sobra de um tarball antigo e não é usado. A task do ícone da seção 9
+      dependia dessa sobra: numa máquina nova só com o AppImage, falharia.
+- [x] Implementado (2026-10-04) no role `apps` (tag `antigravity`):
+      - `antigravity_ide_install: true` e `antigravity_ide_manifest_url` (o manifesto que o próprio
+        app consulta: electron-updater, canal `latest-x64` → `latest-x64-linux.yml`).
+      - `fuse-libs` (FUSE 2, para rodar AppImages).
+      - Sem o binário em `antigravity_ide_dir`: lê o manifesto, pega o `.AppImage`, converte o
+        `sha512` (base64) para hex e baixa com `get_url` + `checksum`. Com o binário lá, não baixa:
+        o app se atualiza sozinho trocando o próprio AppImage.
+      - Ícone extraído do próprio AppImage (`--appimage-extract`, sem FUSE; o `antigravity.png` da
+        raiz é symlink, então extrai o `usr/share/icons/hicolor/512x512/apps/antigravity.png`).
+        `extract_asar_file.py` removido.
+      - `.desktop`: `Exec=… %U`, `MimeType=x-scheme-handler/antigravity;` (devolve o login do
+        navegador ao app), sem `Path=`; `StartupWMClass=antigravity` mantido (validado na seção 9).
+      Validado (2026-10-04) em container `fedora:44`:
+      - Máquina nova: `--check` relata as mudanças sem falhar; 1ª execução baixa o AppImage real
+        (189 MB, dono o usuário, `0755`), extrai o ícone (PNG 512×512) e cria o `.desktop`
+        (`desktop-file-validate` sem erros; `mimeinfo.cache` com
+        `x-scheme-handler/antigravity=antigravity.desktop`); 2ª execução e `--check` `changed=0`.
+      - Pasta como a do `noir` (AppImage + sobras): não baixa; ícone e `.desktop` criados.
+      - `antigravity_ide_install: false` sem a IDE: nada baixado, sem atalho. `--tags shortcuts`
+        sozinho: sem erro (sem saber se o AppImage existe, não baixa).
+      - Manifesto local (servidor HTTP no container): checksum certo → baixa o arquivo exato;
+        checksum errado → `get_url` recusa e nada é gravado.
+- [x] **`noir`:** `--tags antigravity --skip-tags shell`: não baixa nada (o AppImage já está lá); o
+      `.desktop` muda (`%U`, `MimeType`). Conferir que o login no Antigravity volta do navegador
+      para o app. Depois, apagar à mão as sobras do tarball (tudo em `~/wks/tools/antigravity` menos
+      o arquivo `antigravity`) e, se quiser o ícone novo, apagar
+      `~/.local/share/icons/hicolor/512x512/apps/antigravity.png` antes de rodar.
+      Validado pelo usuário (2026-10-04). Conferido no `noir`: a pasta só tem o `antigravity` (sobras
+      apagadas), o `.desktop` tem `%U` e o `MimeType`, e o `mimeinfo.cache` aponta
+      `x-scheme-handler/antigravity` para ele. O ícone ficou o antigo (mesmo arquivo de 48633 bytes).
+
 ---
 
 ## Ordem sugerida
@@ -555,3 +592,4 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 7. ~~NVIDIA no `noir` reinstalado com Secure Boot (seção 5, etapa 8)~~ — feito (falta só conferir no próximo kernel)
 8. ~~Identidade do git e lembrete do `gh` (seção 8)~~ — feito
 9. ~~Atalho do Antigravity IDE (seção 9)~~ — feito
+10. ~~Antigravity IDE instalado pelo playbook (seção 10)~~ — feito
