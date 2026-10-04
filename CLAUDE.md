@@ -19,7 +19,7 @@ nota de validação no mesmo commit.
 Etapa 8 da seção 5 (NVIDIA no `noir` reinstalado) concluída em 2026-10-03, menos a conferência
 na próxima atualização de kernel de verdade (o `akmods` recompila e assina no boot). Os achados
 dessa etapa (reboot gate com RTC em hora local, dGPU acordada pelo widget de GPU do Plasma) estão
-no bloco "Retomar daqui" dela. Seção 8 (identidade do git e `gh`) implementada; falta aplicar no `noir`.
+no bloco "Retomar daqui" dela. Seção 8 (identidade do git e `gh`) concluída e validada na VM e no `noir` em 2026-10-04.
 
 ## Estrutura
 

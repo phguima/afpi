@@ -496,7 +496,7 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       `/root/.gitconfig` não criado; o git lê o nome com aspas certo), 2ª execução e `--check` com
       `changed=0`; identidade vazia → só os padrões; lembrete aparece sem `hosts.yml` e com
       `hosts.yml` vazio (depois de logout), some com `github.com:`; `shellcheck` limpo.
-- [ ] **VM (usuário):** conferir a seção 8 de verdade numa VM Fedora 44:
+- [x] **VM (usuário):** conferir a seção 8 de verdade numa VM Fedora 44:
       - `./bootstrap.sh` numa VM sem `~/.gitconfig`: pergunta hostname, nome e e-mail (e-mail
         inválido é recusado); `cat host_vars/127.0.0.1.yml` com os três valores. 2ª execução só com
         Enter mantém tudo.
@@ -507,8 +507,10 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
         `gh auth login … --web` + `gh auth setup-git`, a próxima execução não mostra mais o lembrete
         e `git ls-remote https://github.com/<user>/<repo>` funciona.
       - Bootstrap deixando nome e e-mail vazios: o playbook aplica só os dois padrões.
-- [ ] **`noir`:** `./bootstrap.sh` (Enter mantém o hostname; a identidade vem do `~/.gitconfig`) e
+      Validado pelo usuário (2026-10-04).
+- [x] **`noir`:** `./bootstrap.sh` (Enter mantém o hostname; a identidade vem do `~/.gitconfig`) e
       depois `--tags git`: deve mudar só os dois padrões; a seguinte `changed=0`, sem lembrete do `gh`.
+      Validado pelo usuário (2026-10-04).
 
 ---
 
@@ -521,3 +523,4 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 5. ~~README do reboot gate (seção 6)~~ — feito
 6. ~~Roteiro nas VMs GNOME e KDE com Secure Boot (seção 5, etapas 0–7)~~ — feito
 7. ~~NVIDIA no `noir` reinstalado com Secure Boot (seção 5, etapa 8)~~ — feito (falta só conferir no próximo kernel)
+8. ~~Identidade do git e lembrete do `gh` (seção 8)~~ — feito
