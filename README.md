@@ -1,4 +1,4 @@
-# AFPI (Advanced Fedora Post-Install) - Ansible Role-Based
+# AFPI (Ansible Fedora Post-Install)
 
 [![Project Status: Active](https://img.shields.io/badge/Project%20Status-Active-brightgreen.svg)](#-project-status)
 
