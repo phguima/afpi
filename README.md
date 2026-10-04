@@ -1,6 +1,7 @@
 # AFPI (Ansible Fedora Post-Install)
 
 [![Project Status: Active](https://img.shields.io/badge/Project%20Status-Active-brightgreen.svg)](#-project-status)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 AFPI is a modular and intelligent system for Fedora Workstation post-installation (Validated on Fedora 41-44). It uses an architecture based on **Roles** and environment-aware variables (Jinja2), allowing your desktop customization and hardware optimizations to be applied consistently, making your workstation deployment fully automated and "hardware-aware".
 
@@ -137,3 +138,7 @@ The `akmods_mok` role (used by `nvidia` and by the VirtualBox install in `apps`)
 
 ### Universal Cedilla (ç) Fix
 Uses a `~/.XCompose` mapping (System) plus Flatpak overrides. Browsers, Bitwarden and Antigravity run on native Wayland with no extra fix; Zoom is the exception and always runs on XWayland (it hardcodes xcb), where the cedilla also works.
+
+## 📄 License
+
+AFPI is free software, released under the [GNU General Public License v3.0](LICENSE). You can use, modify and redistribute it; modified versions you distribute must also be released under the GPL v3.
