@@ -496,6 +496,12 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       `/root/.gitconfig` não criado; o git lê o nome com aspas certo), 2ª execução e `--check` com
       `changed=0`; identidade vazia → só os padrões; lembrete aparece sem `hosts.yml` e com
       `hosts.yml` vazio (depois de logout), some com `github.com:`; `shellcheck` limpo.
+- [x] `bootstrap.sh` **mescla** o `host_vars/127.0.0.1.yml` em vez de sobrescrever: antes, qualquer
+      outra variável posta à mão no arquivo (ex.: `antigravity_ide_dir`) sumia na execução seguinte.
+      Veio do port para o AAPI (2026-10-04). Comentários escritos à mão no arquivo ainda se perdem
+      (o PyYAML não os preserva). Validado (2026-10-04) em container `fedora:44` (`expect` para
+      simular o terminal): arquivo novo com as três chaves; chaves extras preservadas com Enter em
+      tudo e ao mudar o hostname; arquivo vazio tratado como novo; `shellcheck` limpo.
 - [x] **VM (usuário):** conferir a seção 8 de verdade numa VM Fedora 44:
       - `./bootstrap.sh` numa VM sem `~/.gitconfig`: pergunta hostname, nome e e-mail (e-mail
         inválido é recusado); `cat host_vars/127.0.0.1.yml` com os três valores. 2ª execução só com

@@ -48,7 +48,8 @@ fi
 # 4. Machine settings: hostname and git identity
 # Asked here, not in the playbook, so ansible-playbook never stops for input. The answers go to
 # host_vars/127.0.0.1.yml (git-ignored, machine-specific), which overrides group_vars/all.
-# The file is read and written with PyYAML (installed with Ansible) so names with quotes survive.
+# The file is read and written with PyYAML (installed with Ansible) so names with quotes survive;
+# other keys already in it are kept.
 HOST_VARS="host_vars/127.0.0.1.yml"
 
 # Prints the value of key $1 saved in $HOST_VARS (empty when missing)
@@ -94,12 +95,16 @@ if [ -t 0 ]; then
 
     mkdir -p host_vars
     python3 - "$HOST_VARS" "$new_hostname" "$git_name" "$git_email" <<'PY'
-import sys, yaml
+import os, sys, yaml
 path, hostname, name, email = sys.argv[1:]
+data = {}
+if os.path.exists(path):
+    with open(path) as f:
+        data = yaml.safe_load(f) or {}
+data.update({"system_hostname": hostname, "git_user_name": name, "git_user_email": email})
 with open(path, "w") as f:
     f.write("---\n# Written by bootstrap.sh: settings for this machine only (not tracked by git).\n")
-    yaml.safe_dump({"system_hostname": hostname, "git_user_name": name, "git_user_email": email},
-                   f, sort_keys=False, allow_unicode=True, default_flow_style=False)
+    yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True, default_flow_style=False)
 PY
     success "Hostname '${new_hostname}' saved to ${HOST_VARS} (applied by the playbook)."
     if [ -n "$git_name" ] || [ -n "$git_email" ]; then

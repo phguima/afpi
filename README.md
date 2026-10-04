@@ -60,7 +60,7 @@ Prepare the Ansible environment:
 ```bash
 ./bootstrap.sh
 ```
-It also asks for this machine's settings and saves them to `host_vars/127.0.0.1.yml`, which is git-ignored and overrides `group_vars/all/all.yml`. The playbook applies them without stopping to ask. Run `./bootstrap.sh` again to change them.
+It also asks for this machine's settings and saves them to `host_vars/127.0.0.1.yml`, which is git-ignored and overrides `group_vars/all/all.yml` (other variables you put there are kept). The playbook applies them without stopping to ask. Run `./bootstrap.sh` again to change them.
 
 *   **Hostname** (Enter keeps the current one). With no answer saved, the hostname is left untouched.
 *   **Git `user.name` and `user.email`** (Enter keeps the saved value or the one already in `~/.gitconfig`; empty skips them). The playbook writes them to your `~/.gitconfig`, together with `init.defaultBranch=main` and `pull.ff=only` (`git_config_defaults` in `all.yml`, tag `git`).
