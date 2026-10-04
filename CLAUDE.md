@@ -41,17 +41,18 @@ no bloco "Retomar daqui" dela. Seção 8 (identidade do git e `gh`) concluída e
   pergunta e grava em `host_vars/127.0.0.1.yml` (no `.gitignore`, por máquina), que vence o
   `group_vars`. Nada pessoal fixo no repo: **o AFPI também é usado por outras pessoas**. Nada no
   playbook pede input durante a execução: perguntas vão para o `bootstrap.sh`.
-- `group_vars/all/secrets.yml`: **Ansible Vault**, só com `api_keys`. O Claude não tem a senha do
-  vault: não tentar abrir; pedir ao usuário quando precisar mexer. Os arquivos de
-  `group_vars/all/` carregam em ordem alfabética, então uma variável no vault vence a do `all.yml`.
+- Sem vault desde 2026-10-04: `api_keys` é `""` no `all.yml` (vazio = sem linhas de API no
+  `.zshrc`). Quem quiser chaves cria um vault opcional em `group_vars/all/secrets.yml` (no
+  `.gitignore`, nunca commitado; ver o README). Se ele existir, o Claude não tem a senha: não tentar
+  abrir. Os arquivos de `group_vars/all/` carregam em ordem alfabética, então o vault vence o `all.yml`.
 - Execução real (só o usuário, na máquina dele):
-  `ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass` (`./bootstrap.sh` antes, na
-  primeira vez).
+  `ansible-playbook -i inventory.ini site.yml -K` (`./bootstrap.sh` antes, na primeira vez;
+  `--ask-vault-pass` só com o vault opcional).
 
 ## Convenções
 
 - Commits em inglês, Conventional Commits com escopo: `feat(update): …`, `fix(nvidia): …`,
-  `docs(todo): …`, `chore(vault): …`.
+  `docs(todo): …`, `chore(git): …`.
 - Nomes de task no formato `Área | Ação` (`MOK | Request enrollment`), comentários em inglês,
   explicando o *porquê* (ver os existentes).
 - Leituras (`command`/`shell` que só consultam) levam `changed_when: false` e, quando os facts
@@ -107,7 +108,7 @@ Receitas que funcionaram (imagem `registry.fedoraproject.org/fedora:44`):
   e redirecionar a saída, senão o exec não retorna. O `ansible-galaxy` como esse usuário travou:
   instalar como root com `-p /usr/share/ansible/collections`.
 - O `site.yml` completo **não** roda num container comum: sem systemd (serviços, `hostname`), sem
-  `/etc/default/grub` e sem o vault (`-e 'api_keys="# fake"'`). O `--check` geral é só na VM.
+  `/etc/default/grub` (para testar o bloco de API, `-e 'api_keys="# fake"'`). O `--check` geral é só na VM.
 - Rodar duas vezes para conferir a idempotência (`changed=0` na 2ª) e testar o `--check`.
 - zsh: escrever `${VAR}:ro`, não `$VAR:ro` (o zsh lê `:r` como modificador).
 - Ao terminar, remover os containers (`podman rm -f`).

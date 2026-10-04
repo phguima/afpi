@@ -581,6 +581,24 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 
 ---
 
+## 11. Vault removido (`api_keys` opcional)
+
+- [x] Sem vault desde 2026-10-04: a única chave real (`GITHUB_MCP_PAT`, da extensão `github` do
+      Gemini, que está comentada) saiu, e as outras linhas eram só exemplos comentados. `api_keys: ""`
+      no `all.yml`; o bloco do `.zshrc` só ganha as linhas de API quando `api_keys` tem conteúdo (sem
+      conteúdo, fica só o placeholder da NVIDIA). `group_vars/all/secrets.yml` removido do repo e
+      posto no `.gitignore`: quem quiser chaves cria um vault local (`ansible-vault create`, ver o
+      README "API keys (optional)") e usa `--ask-vault-pass`. O `bootstrap.sh` mostra o comando com
+      `--ask-vault-pass` só quando o vault existe e está cifrado (e avisa se não estiver).
+      `--ask-vault-pass` saiu do README, `CLAUDE.md` e comandos de conferência. Validado em container
+      `fedora:44`: `.zshrc` com o bloco antigo e uma chave falsa → a chave some do usuário e do root;
+      com `-e api_keys` → as linhas aparecem; de volta a vazio → somem; a 2ª execução de cada cenário
+      `changed=0`. Mensagens do `bootstrap.sh` conferidas sem vault, com vault cifrado e com vault em
+      texto puro.
+- [ ] No `noir`: apagar o vault local (`rm group_vars/all/secrets.yml`, agora ignorado pelo git; com
+      ele cifrado o playbook pediria a senha) e rodar com `--tags setup` → o `.zshrc` fica sem o
+      `GITHUB_MCP_PAT`. Revogar o token no GitHub se ele não for mais usado.
+
 ## Ordem sugerida
 
 1. ~~`is_secure_boot` → MOK idempotente → reboot gate (seção 1)~~ — feito
@@ -593,3 +611,4 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
 8. ~~Identidade do git e lembrete do `gh` (seção 8)~~ — feito
 9. ~~Atalho do Antigravity IDE (seção 9)~~ — feito
 10. ~~Antigravity IDE instalado pelo playbook (seção 10)~~ — feito
+11. ~~Vault removido (seção 11)~~ — feito (falta apagar o vault local no `noir`)

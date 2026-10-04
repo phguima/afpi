@@ -44,14 +44,22 @@ AFPI features a comprehensive tagging system that allows you to run specific par
 | **Software** | `apps`, `software`, `dnf`, `flatpak`, `shortcuts` | Application installation via DNF or Flatpak, and menu entries (Steam on the NVIDIA GPU, Antigravity IDE). |
 | **AI** | `ai`, `claude`, `gemini`, `extensions`, `python` | Claude Code, Gemini CLI, extensions, and AI-related Python libraries. |
 
-## 🔐 Secrets Management (Ansible Vault)
+## 🔐 API keys (optional)
 
-AFPI uses **Ansible Vault** to protect sensitive information. Since the provided `group_vars/all/secrets.yml` is encrypted, you must create your own if you fork this project.
+AFPI needs no secrets and no vault. The `api_keys` variable (empty in `group_vars/all/all.yml`) holds shell exports written to your `~/.zshrc`; while it is empty, no API key lines are added. To use it, keep your keys in an encrypted **Ansible Vault**, which is git-ignored and never committed:
 
-### Required Variables in `secrets.yml`
-| Variable | Description | Example / Usage |
-| :--- | :--- | :--- |
-| `api_keys` | Block of environment exports for your shell | `export SERVICE_API_KEY="your_value_here"` |
+```bash
+ansible-vault create group_vars/all/secrets.yml
+```
+
+with content like:
+
+```yaml
+api_keys: |
+  export SERVICE_API_KEY="your_value_here"
+```
+
+Then add `--ask-vault-pass` to the commands below (`./bootstrap.sh` reminds you when the vault exists). Use `ansible-vault edit group_vars/all/secrets.yml` to change it later.
 
 ## 🚀 Getting Started
 
@@ -68,7 +76,7 @@ It also asks for this machine's settings and saves them to `host_vars/127.0.0.1.
 ### 2. Run the Playbook
 Apply the full configuration (the provided `ansible.cfg` is optimized for faster deployment):
 ```bash
-ansible-playbook -i inventory.ini site.yml -K --ask-vault-pass
+ansible-playbook -i inventory.ini site.yml -K
 ```
 
 > [!IMPORTANT]
@@ -99,7 +107,7 @@ Some laptops (especially those with hybrid graphics or specific ASUS/NVIDIA comb
 1.  **Hard Reboot** the machine (hold power button).
 2.  Run the playbook skipping the power management and hardware-specific tags to isolate the issue:
     ```bash
-    ansible-playbook site.yml --skip-tags power,asus --ask-vault-pass
+    ansible-playbook site.yml --skip-tags power,asus
     ```
 3.  If the playbook finishes successfully with these skips, the conflict is likely in the NVIDIA Deep Power Management settings or the `supergfxd` service.
 

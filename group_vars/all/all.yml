@@ -217,4 +217,7 @@ ptyxis_opacity: 0.95
 # boot. MokManager uses a US keyboard layout, so stick to plain letters, digits and '-'.
 mok_password: "fedora-afpi"
 
-# Secrets (api_keys) live in group_vars/all/secrets.yml, encrypted with ansible-vault.
+# Shell exports for API keys, written to the user's .zshrc (empty: no API key lines). Keep real
+# keys out of this file: set api_keys in an optional, git-ignored vault instead (see README,
+# "API keys (optional)"); group_vars/all/secrets.yml loads after all.yml and overrides this.
+api_keys: ""

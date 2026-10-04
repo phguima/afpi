@@ -140,7 +140,7 @@
   tags: [shell, omz, aliases]
 
 # Only for the user who runs the playbook: root does not use the API keys and has no business
-# keeping secrets from the vault in its .zshrc.
+# keeping them in its .zshrc. api_keys is empty unless an optional vault sets it (see README).
 - name: ZSH | Add NVIDIA and API key placeholders to .zshrc
   ansible.builtin.blockinfile:
     path: "{{ item.home }}/.zshrc"
@@ -151,9 +151,11 @@
       #export __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0
       #export __GLX_VENDOR_LIBRARY_NAME=nvidia
       #export __NV_PRIME_RENDER_OFFLOAD=1
+      {% if api_keys | trim %}
 
       # API KEYS Configuration
       {{ api_keys }}
+      {% endif %}
     owner: "{{ item.name }}"
     mode: '0644'
   loop: "{{ zsh_users }}"
