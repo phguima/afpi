@@ -9,9 +9,9 @@ AFPI is a modular and intelligent system for Fedora Workstation post-installatio
 
 ## 📊 Project Status
 
-*   **Current Version:** 2.8.0
+*   **Current Version:** 2.9.0
 *   **Last Update:** October 4, 2026
-*   **Latest Improvement:** Git identity asked once by `bootstrap.sh` and applied to the user's `~/.gitconfig`, a GitHub CLI login reminder at the end of the run, a menu entry for the Antigravity IDE, and a leaner root `.zshrc` (generic aliases only, no API keys, no Antigravity CLI).
+*   **Latest Improvement:** The Antigravity IDE is installed from its official update manifest (latest AppImage, SHA-512 verified; it keeps itself updated afterwards), with a menu entry that also handles the login callback. `bootstrap.sh` now keeps any other variables you put in `host_vars/127.0.0.1.yml`.
 *   **Stability:** Production-ready for Fedora 41, 42, 43, and 44.
 
 ## 🏗️ Architecture and Roles
