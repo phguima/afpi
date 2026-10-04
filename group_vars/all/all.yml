@@ -192,7 +192,7 @@ zsh_aliases_common: |
 zsh_aliases_user: |
   alias claudecli="cd ~/wks; clear; claude"
   alias agycli="cd ~/wks; clear; agy"
-  alias antigravity-ide="cd ~/wks/tools/antigravity; ./antigravity"
+  alias antigravity-ide='"{{ antigravity_ide_dir }}/antigravity"'
   alias open-thevoid="udisksctl unlock -b /dev/nvme1n1p3; udisksctl mount -b /dev/mapper/luks-ad99f7e6-cf3a-4581-9c46-de99119b00d4"
   alias close-thevoid="udisksctl unmount -b /dev/mapper/luks-ad99f7e6-cf3a-4581-9c46-de99119b00d4; udisksctl lock -b /dev/nvme1n1p3"
   alias nvidia-run="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0"

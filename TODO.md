@@ -529,6 +529,12 @@ Execuções (sempre o mesmo comando, de um terminal da sessão gráfica):
       janela aberta fica agrupada no mesmo ícone da dock/barra de tarefas (se aparecer um ícone
       genérico separado, conferir o `app_id` da janela e ajustar o `StartupWMClass`).
       Validado pelo usuário (2026-10-04).
+- [x] Alias `antigravity-ide`: era `cd ~/wks/tools/antigravity; ./antigravity` (caminho fixo, deixava
+      o terminal na pasta da IDE). Agora chama `{{ antigravity_ide_dir }}/antigravity` direto, sem
+      `cd`; continua em primeiro plano, com o log no terminal (de propósito: ajuda a depurar; para
+      abrir sem terminal, usar o ícone do menu). Validado (2026-10-04) em container (bloco renderizado
+      com o caminho completo, 2ª execução `changed=0`, pasta do shell intacta) e pelo usuário no
+      `noir` (a IDE abre fora da própria pasta).
 
 ---
 
