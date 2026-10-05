@@ -146,7 +146,7 @@
     group: "{{ user_name }}"
     mode: '0755'
   when: user_name != 'root'
-  tags: [software, shortcuts]
+  tags: [software, shortcuts, antigravity]
 
 - name: Shortcuts | Create local override for Steam shortcut
   ansible.builtin.copy:
@@ -240,6 +240,19 @@
 # at its root is only a symlink, so extract the real file. Naming the entry
 # antigravity.desktop lets the dock match the window (Wayland app_id 'antigravity') to it; the
 # MimeType lets the browser hand the login callback (antigravity://) back to the app.
+# Each level of the icon path is owned by the user: something run as root with the user's HOME can
+# leave ~/.local/share/icons/hicolor owned by root, and the extract below runs as the user.
+- name: Antigravity IDE | Ensure the icon directories belong to the user
+  ansible.builtin.file:
+    path: "{{ user_home }}/.local/share/icons/{{ item }}"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0755'
+  loop: [hicolor, hicolor/512x512, hicolor/512x512/apps]
+  when: user_name != 'root' and (antigravity_ide_bin.stat.exists | default(false) or antigravity_ide_download | default({}) is changed)
+  tags: [software, shortcuts, antigravity]
+
 - name: Antigravity IDE | Extract the icon
   ansible.builtin.shell:
     cmd: |
