@@ -13,6 +13,12 @@ Legend: 🔴 works wrong today · 🟠 robustness · 🟡 cosmetic / polish
       kernel (`akmods` rebuilds and signs at boot; it should show `noir`'s akmods key) and
       `nvidia-smi` working.
 
+## Package names
+
+- [ ] 🟡 `p7zip` and `p7zip-plugins` in `dnf_packages_common` are only provides of `7zip` and
+      `7zip-standalone` on Fedora 44 (found by ALPI's Molecule verify, 2026-10-05): list the real
+      names, like AAPI does.
+
 ## Molecule tests
 
 - [ ] Install Molecule with the podman driver (pipx, see `CLAUDE.md`) and add a `requirements`
