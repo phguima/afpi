@@ -1,14 +1,14 @@
-# AFPI — O que falta
+# AFPI — What is left
 
-Só o que ainda está aberto. O histórico (itens feitos, achados e como cada um foi validado) fica no
-git: o `TODO.md` completo está no commit `aa885a2` (`git show aa885a2:TODO.md`).
+Only what is still open. The history (done items, findings and how each one was validated) lives
+in git: the full `TODO.md` is in commit `aa885a2` (`git show aa885a2:TODO.md`, in Portuguese).
 
-Legenda: 🔴 funciona errado hoje · 🟠 robustez · 🟡 cosmético / polimento
+Legend: 🔴 works wrong today · 🟠 robustness · 🟡 cosmetic / polish
 
 ---
 
-## NVIDIA com Secure Boot no `noir`
+## NVIDIA with Secure Boot on `noir`
 
-- [ ] Na próxima atualização de kernel de verdade: depois do reboot, `modinfo -F signer nvidia`
-      no kernel novo (o `akmods` recompila e assina no boot; deve mostrar a chave akmods do
-      `noir`) e `nvidia-smi` funcionando.
+- [ ] On the next real kernel update: after the reboot, `modinfo -F signer nvidia` on the new
+      kernel (`akmods` rebuilds and signs at boot; it should show `noir`'s akmods key) and
+      `nvidia-smi` working.

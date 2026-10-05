@@ -1,127 +1,137 @@
-# AFPI — instruções para o Claude
+# AFPI — instructions for Claude
 
-AFPI (Ansible Fedora Post-Install): playbook Ansible que configura uma workstation Fedora (41–44)
-depois da instalação. Repo `phguima/afpi`, branch única `main`. A máquina-alvo é a máquina pessoal
-do usuário (hostname `noir`: ASUS TUF Gaming F15, híbrido Intel + NVIDIA RTX 3050 (Ampere), Fedora 44,
-**Secure Boot sempre ligado**: decisão do usuário, nunca desligar nem sugerir desligar; **dual boot com
-Windows**, além do disco `thevoid`). O usuário conversa em português.
+AFPI (Ansible Fedora Post-Install): an Ansible playbook that sets up a Fedora (41–44) workstation
+after installation. Repo `phguima/afpi`, single branch `main`. The target is the user's personal
+machine (hostname `noir`: ASUS TUF Gaming F15, hybrid Intel + NVIDIA RTX 3050 (Ampere), Fedora 44,
+**Secure Boot always on**: the user's decision, never turn it off or suggest turning it off; **dual
+boot with Windows**, plus the `thevoid` disk). Talk to the user in English; all docs are in English.
 
-O **AAPI** (`phguima/aapi`, em `../aapi` no workspace original) é o port deste projeto para
-AlmaLinux 10 (máquina do trabalho). Várias melhorias de arquitetura nasceram lá e estão sendo
-trazidas para cá. Ao portar algo do AAPI, adaptar o que é do EL10 (dnf4, EPEL/CRB, nomes de pacote).
+**AAPI** (`phguima/aapi`, at `../aapi` in the original workspace) is this project's port to
+AlmaLinux 10 (work machine). Several architecture improvements started there and are being brought
+here. When porting something from AAPI, adapt what is EL10-specific (dnf4, EPEL/CRB, package names).
 
-## Estado do trabalho
+**ALPI** (`phguima/alpi`, at `../alpi`) is the planned successor that unifies AFPI and AAPI (design
+stage since 2026-10-05). Changes made here until parity must also be ported there: note them in
+ALPI's `TODO.md`.
 
-`TODO.md` (em português) tem **só o que falta**. **Ler antes de começar.** O histórico (itens
-feitos, achados como o reboot gate com RTC em hora local e a dGPU acordada pelo widget de GPU do
-Plasma, e como cada item foi validado) foi tirado dele em 2026-10-04 e fica no git:
-`git show aa885a2:TODO.md`. Ao concluir um item, removê-lo do `TODO.md` e registrar a validação na
-mensagem do commit; tarefa nova entra no `TODO.md` até ser feita.
+## Work status
 
-## Estrutura
+`TODO.md` holds **only what is left**. **Read it before starting.** The history (done items,
+findings such as the reboot gate with the RTC in local time and the dGPU woken up by the Plasma GPU
+widget, and how each item was validated) was removed from it on 2026-10-04 and lives in git:
+`git show aa885a2:TODO.md` (in Portuguese). When an item is done, remove it from `TODO.md` and
+record the validation in the commit message; a new task goes into `TODO.md` until it is done.
 
-- `site.yml`: play único em `localhost` com `become: yes`. `pre_tasks` importa
-  `tasks/env_setup.yml` (facts: usuário, GPU, DE, `is_secure_boot`, assert de distro). Ordem dos
-  roles: `update` → `nvidia` → `hardware` → `common` → `apps` → `desktop` → `ai_tools`. O handler
-  `Regenerate GRUB` fica no próprio `site.yml`.
-- `roles/akmods_mok`: chave de assinatura akmods + enroll MOK (só com Secure Boot). Não está no
-  `site.yml`: é importado (`import_role`) pelo `nvidia` e pelo `apps` antes dos pacotes akmod
-  (driver NVIDIA, VirtualBox do RPM Fusion). Idempotente: importar duas vezes não faz nada.
-- `roles/update` termina com um **reboot gate**: `dnf needs-restarting -r` → rc 1, **ou** kernel em
-  execução diferente do `kernel-core` mais novo, encerra o play pedindo reboot (`meta: end_host`).
-  Numa máquina nova a 1ª execução quase sempre para ali. A comparação de kernels existe porque o
-  `needs-restarting` usa a hora de boot do systemd, errada com o RTC em hora local (dual boot com
-  Windows): no `noir` ele deu rc 0 logo depois de instalar um kernel novo. Não criar task que force o
-  RTC em UTC: em dual boot, isso desacerta o relógio do Windows.
-- `group_vars/all/all.yml`: todas as variáveis, inclusive `mok_password`. O `system_hostname` e a
-  identidade do git (`git_user_name`, `git_user_email`) ficam vazios (= não mexe): o `bootstrap.sh`
-  pergunta e grava em `host_vars/127.0.0.1.yml` (no `.gitignore`, por máquina), que vence o
-  `group_vars`. Nada pessoal fixo no repo: **o AFPI também é usado por outras pessoas**. Nada no
-  playbook pede input durante a execução: perguntas vão para o `bootstrap.sh`.
-- Sem vault desde 2026-10-04: `api_keys` é `""` no `all.yml` (vazio = sem linhas de API no
-  `.zshrc`). Quem quiser chaves cria um vault opcional em `group_vars/all/secrets.yml` (no
-  `.gitignore`, nunca commitado; ver o README). Se ele existir, o Claude não tem a senha: não tentar
-  abrir. Os arquivos de `group_vars/all/` carregam em ordem alfabética, então o vault vence o `all.yml`.
-- Execução real (só o usuário, na máquina dele):
-  `ansible-playbook -i inventory.ini site.yml -K` (`./bootstrap.sh` antes, na primeira vez;
-  `--ask-vault-pass` só com o vault opcional).
+## Structure
 
-## Convenções
+- `site.yml`: single play on `localhost` with `become: yes`. `pre_tasks` imports
+  `tasks/env_setup.yml` (facts: user, GPU, DE, `is_secure_boot`, distro assert). Role order:
+  `update` → `nvidia` → `hardware` → `common` → `apps` → `desktop` → `ai_tools`. The
+  `Regenerate GRUB` handler lives in `site.yml` itself.
+- `roles/akmods_mok`: akmods signing key + MOK enrollment (only with Secure Boot). It is not in
+  `site.yml`: `nvidia` and `apps` import it (`import_role`) before the akmod packages (NVIDIA
+  driver, VirtualBox from RPM Fusion). Idempotent: importing it twice does nothing.
+- `roles/update` ends with a **reboot gate**: `dnf needs-restarting -r` → rc 1, **or** a running
+  kernel different from the newest `kernel-core`, ends the play asking for a reboot
+  (`meta: end_host`). On a new machine the first run almost always stops there. The kernel
+  comparison exists because `needs-restarting` uses systemd's boot time, which is wrong with the
+  RTC in local time (dual boot with Windows): on `noir` it returned rc 0 right after a new kernel
+  was installed. Do not add a task that forces the RTC to UTC: in dual boot that breaks the Windows
+  clock.
+- `group_vars/all/all.yml`: all variables, including `mok_password`. `system_hostname` and the git
+  identity (`git_user_name`, `git_user_email`) are empty (= leave as is): `bootstrap.sh` asks for
+  them and saves them to `host_vars/127.0.0.1.yml` (in `.gitignore`, per machine), which wins over
+  `group_vars`. Nothing personal hard-coded in the repo: **other people use AFPI too**. Nothing in
+  the playbook asks for input during the run: questions go into `bootstrap.sh`.
+- No vault since 2026-10-04: `api_keys` is `""` in `all.yml` (empty = no API lines in `.zshrc`).
+  Whoever wants keys creates an optional vault at `group_vars/all/secrets.yml` (in `.gitignore`,
+  never committed; see the README). If it exists, Claude does not have the password: do not try to
+  open it. Files in `group_vars/all/` load in alphabetical order, so the vault wins over `all.yml`.
+- Real run (only the user, on their machine):
+  `ansible-playbook -i inventory.ini site.yml -K` (`./bootstrap.sh` first, the first time;
+  `--ask-vault-pass` only with the optional vault).
 
-- Commits em inglês, Conventional Commits com escopo: `feat(update): …`, `fix(nvidia): …`,
+## Conventions
+
+- Commits in English, Conventional Commits with scope: `feat(update): …`, `fix(nvidia): …`,
   `docs(todo): …`, `chore(git): …`.
-- Nomes de task no formato `Área | Ação` (`MOK | Request enrollment`), comentários em inglês,
-  explicando o *porquê* (ver os existentes).
-- Leituras (`command`/`shell` que só consultam) levam `changed_when: false` e, quando os facts
-  precisam valer no `--check`, `check_mode: false`.
-- Segredos passados a comandos vão por `stdin:` com `no_log: true`, nunca por `echo` na linha de comando.
+- Task names as `Area | Action` (`MOK | Request enrollment`); comments in English, explaining the
+  *why* (see the existing ones).
+- Reads (`command`/`shell` that only query) get `changed_when: false` and, when the facts must hold
+  under `--check`, `check_mode: false`.
+- Secrets passed to commands go through `stdin:` with `no_log: true`, never through `echo` on the
+  command line.
 
 ## Git
 
-- Começar com `git fetch` + `git pull --ff-only`: o usuário também commita de outras máquinas
-  (já aconteceu de o push ser rejeitado por isso). Conferir de novo antes de cada push.
-- Commit e push **só quando o usuário pedir**. Se o remoto andou, ver o que veio
-  (`git log HEAD..origin/main`) antes do rebase.
+- Start with `git fetch` + `git pull --ff-only`: the user also commits from other machines (a push
+  was already rejected because of that). Check again before every push.
+- Commit and push **only when the user asks**. If the remote moved, look at what came in
+  (`git log HEAD..origin/main`) before rebasing.
 
-## Testes — NUNCA no host
+## Tests — NEVER on the host
 
-Os testes rodam **só em container (podman) ou na VM do usuário**, nunca na máquina do usuário,
-nem playbooks só de leitura, nem `--check`. Ler arquivos do host ou consultar o rpm é ok; rodar
-o playbook ou partes dele, não.
+Tests run **only in a container (podman) or in the user's VM**, never on the user's machine, not
+even read-only playbooks, not even `--check`. Reading host files or querying rpm is fine; running
+the playbook or parts of it is not.
 
-Receitas que funcionaram (imagem `registry.fedoraproject.org/fedora:44`):
+Recipes that worked (image `registry.fedoraproject.org/fedora:44`):
 
 - Base: `podman run --rm -v <repo>:/afpi:ro,z -v <scratch>:/t:ro,z fedora:44 sh -c 'dnf install -y -q ansible-core pciutils; …'`.
-  Para módulos `community.general` (ex.: `copr`), rodar também
-  `ansible-galaxy collection install community.general`, **sem `-q`**: com `-q` uma falha passa
-  despercebida e o erro aparece depois, em outro task.
-- Usar `:z` (rótulo SELinux compartilhado), não `:Z`, quando o mesmo diretório é montado em vários
-  containers. Com `:Z` cada um toma o rótulo do anterior e dá "Permission denied".
-- Playbook de teste fora do repo não carrega o `group_vars/`: passar `-e @/afpi/group_vars/all/all.yml`.
-  Para rodar o `site.yml` real: copiar o repo para dentro do container, apagar o `secrets.yml` e usar
+  For `community.general` modules (e.g. `copr`), also run
+  `ansible-galaxy collection install community.general`, **without `-q`**: with `-q` a failure goes
+  unnoticed and the error shows up later, in another task.
+- Use `:z` (shared SELinux label), not `:Z`, when the same directory is mounted in several
+  containers. With `:Z` each one takes the label from the previous one and you get "Permission
+  denied". To avoid relabeling host files at all, use `--security-opt label=disable` instead.
+- A test playbook outside the repo does not load `group_vars/`: pass `-e @/afpi/group_vars/all/all.yml`.
+  To run the real `site.yml`: copy the repo into the container, delete `secrets.yml` and use
   `ANSIBLE_BECOME_ASK_PASS=False ansible-playbook site.yml --tags <tag> -e ansible_become=false`.
-- Roles por nome (`import_role: name: akmods_mok`) fora do `site.yml`: `ANSIBLE_ROLES_PATH=/afpi/roles`.
-- Booleanos por `-e` precisam ser JSON (`-e '{"is_nvidia": true}'`). `-e is_nvidia=true` vira
-  string e o ansible-core 2.20 recusa em condicional.
-- Secure Boot falso: montar um diretório com `efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c`
-  (bytes `06 00 00 00 01` = ligado, `… 00` = desligado) **por cima de `/sys/firmware`** com
-  `--security-opt unmask=/sys/firmware -v <dir>:/sys/firmware:ro,z`. Montar um arquivo dentro do
-  sysfs não funciona. Sem a montagem, o container não tem efivars (= BIOS legado).
-- `mokutil` falso em `/usr/local/bin` que registra as chamadas e simula os estados
-  (`not enrolled` rc 0 / `is already enrolled` / `is already in the enrollment request` rc 1). O
-  `kmodgenca` pode ser o real (pacote `akmods`).
-- Wrapper de `dnf` em `/usr/local/bin` para forçar o rc do `dnf needs-restarting`. Não afeta o
-  módulo `ansible.builtin.dnf`, que usa a libdnf5. No container o `needs-restarting` real devolve
-  rc 1 depois de um upgrade (usa o horário de boot do host).
-- Driver NVIDIA no container: `-e '{"is_nvidia": true, "nvidia_driver_packages": ["kmodtool"]}'`
-  para não baixar ~1 GB. O módulo não carrega no container de qualquer jeito.
-- `grub2-mkconfig` não funciona em container (não sonda o disco): usar um falso que registra o `-o`.
-- Tasks só do GNOME (Ptyxis): container de longa duração (`podman run -d … sleep infinity` + `podman exec`)
-  com `sudo dbus-daemon dconf ptyxis`, um usuário comum com `NOPASSWD`, `Defaults env_keep +=
-  "DBUS_SESSION_BUS_ADDRESS XDG_RUNTIME_DIR"` (faz o papel do `pam_systemd` no host real) e um
-  `dbus-daemon --session --address=unix:path=/run/user/1000/bus --fork` desse usuário. O playbook
-  roda **como o usuário**, com `XDG_CURRENT_DESKTOP=GNOME` e `ANSIBLE_BECOME_ASK_PASS=False`
-  (o `env_setup` usa o `SUDO_USER`). Ao rodar `podman exec … sh -c` com `--fork`, usar `</dev/null`
-  e redirecionar a saída, senão o exec não retorna. O `ansible-galaxy` como esse usuário travou:
-  instalar como root com `-p /usr/share/ansible/collections`.
-- O `site.yml` completo **não** roda num container comum: sem systemd (serviços, `hostname`), sem
-  `/etc/default/grub` (para testar o bloco de API, `-e 'api_keys="# fake"'`). O `--check` geral é só na VM.
-- Rodar duas vezes para conferir a idempotência (`changed=0` na 2ª) e testar o `--check`.
-- zsh: escrever `${VAR}:ro`, não `$VAR:ro` (o zsh lê `:r` como modificador).
-- Ao terminar, remover os containers (`podman rm -f`).
+- Roles by name (`import_role: name: akmods_mok`) outside `site.yml`: `ANSIBLE_ROLES_PATH=/afpi/roles`.
+- Booleans via `-e` must be JSON (`-e '{"is_nvidia": true}'`). `-e is_nvidia=true` becomes a string
+  and ansible-core 2.20 rejects it in a conditional.
+- Fake Secure Boot: mount a directory with `efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c`
+  (bytes `06 00 00 00 01` = on, `… 00` = off) **over `/sys/firmware`** with
+  `--security-opt unmask=/sys/firmware -v <dir>:/sys/firmware:ro,z`. Mounting a single file inside
+  sysfs does not work. Without the mount, the container has no efivars (= legacy BIOS).
+- Fake `mokutil` in `/usr/local/bin` that logs the calls and simulates the states
+  (`not enrolled` rc 0 / `is already enrolled` / `is already in the enrollment request` rc 1).
+  `kmodgenca` can be the real one (package `akmods`).
+- `dnf` wrapper in `/usr/local/bin` to force the rc of `dnf needs-restarting`. It does not affect
+  the `ansible.builtin.dnf` module, which uses libdnf5. In the container the real
+  `needs-restarting` returns rc 1 after an upgrade (it uses the host's boot time).
+- NVIDIA driver in the container: `-e '{"is_nvidia": true, "nvidia_driver_packages": ["kmodtool"]}'`
+  to avoid downloading ~1 GB. The module does not load in the container anyway.
+- `grub2-mkconfig` does not work in a container (it does not probe the disk): use a fake one that
+  logs the `-o`.
+- GNOME-only tasks (Ptyxis): long-running container (`podman run -d … sleep infinity` + `podman exec`)
+  with `sudo dbus-daemon dconf ptyxis`, a regular user with `NOPASSWD`, `Defaults env_keep +=
+  "DBUS_SESSION_BUS_ADDRESS XDG_RUNTIME_DIR"` (plays the role of `pam_systemd` on the real host) and
+  a `dbus-daemon --session --address=unix:path=/run/user/1000/bus --fork` for that user. The
+  playbook runs **as the user**, with `XDG_CURRENT_DESKTOP=GNOME` and `ANSIBLE_BECOME_ASK_PASS=False`
+  (`env_setup` uses `SUDO_USER`). When running `podman exec … sh -c` with `--fork`, use `</dev/null`
+  and redirect the output, or the exec never returns. `ansible-galaxy` as that user hung: install
+  as root with `-p /usr/share/ansible/collections`.
+- The full `site.yml` does **not** run in a plain container: no systemd (services, `hostname`), no
+  `/etc/default/grub` (to test the API block, `-e 'api_keys="# fake"'`). The full `--check` is only
+  done in the VM.
+- Run twice to check idempotency (`changed=0` on the 2nd) and test `--check`.
+- zsh: write `${VAR}:ro`, not `$VAR:ro` (zsh reads `:r` as a modifier).
+- When done, remove the containers (`podman rm -f`).
 
-O que depende de hardware (enroll real no MokManager, módulos carregando, reboot de verdade) é
-testado pelo usuário em duas VMs com Secure Boot, uma GNOME e outra KDE (roteiro na seção 5 do
-`TODO.md` histórico, `git show aa885a2:TODO.md`). Deixar no `TODO.md` o que falta conferir lá.
+What depends on hardware (real MokManager enrollment, modules loading, a real reboot) is tested by
+the user in two VMs with Secure Boot, one GNOME and one KDE (checklist in section 5 of the
+historical `TODO.md`, `git show aa885a2:TODO.md`). Leave in `TODO.md` what is still to be checked
+there.
 
-## Particularidades do Fedora
+## Fedora specifics
 
-- `dnf` é o dnf5. O `dnf needs-restarting` vem do `dnf5-plugins` (o `dnf-plugins-core` é o dnf4).
-  Opções do comando vão **depois** do subcomando: `dnf list kernel --showduplicates`, não
-  `dnf --showduplicates list kernel` (sintaxe do dnf4).
-  O `community.general.dnf_config_manager` usa a sintaxe do dnf4 (`--set-disabled`): aqui, usar
+- `dnf` is dnf5. `dnf needs-restarting` comes from `dnf5-plugins` (`dnf-plugins-core` is dnf4).
+  Command options go **after** the subcommand: `dnf list kernel --showduplicates`, not
+  `dnf --showduplicates list kernel` (dnf4 syntax).
+  `community.general.dnf_config_manager` uses dnf4 syntax (`--set-disabled`): here, use
   `dnf config-manager setopt <repo>.enabled=0`.
-- O `mokutil` vem com qualquer instalação UEFI (dependência do `shim-x64`).
-- `/etc/grub2-efi.cfg` é só um symlink para `/boot/grub2/grub.cfg` (o arquivo real, em UEFI e BIOS).
-- `kmodgenca --force` cria um par de chaves novo a cada execução e repõe os symlinks
-  `/etc/pki/akmods/{certs/public_key.der,private/private_key.priv}`. Nunca usar `--force`.
+- `mokutil` comes with every UEFI install (a dependency of `shim-x64`).
+- `/etc/grub2-efi.cfg` is only a symlink to `/boot/grub2/grub.cfg` (the real file, on UEFI and BIOS).
+- `kmodgenca --force` creates a new key pair on every run and resets the symlinks
+  `/etc/pki/akmods/{certs/public_key.der,private/private_key.priv}`. Never use `--force`.
