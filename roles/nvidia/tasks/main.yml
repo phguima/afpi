@@ -3,7 +3,7 @@
 
 - name: NVIDIA | Check if NVIDIA GPU is present
   set_fact:
-    is_nvidia_present: "{{ is_nvidia | default(false) }}"
+    is_nvidia_present: "{{ is_nvidia | default(false) | bool }}"
   tags: [nvidia, hardware]
 
 - name: NVIDIA | Check if NVIDIA drivers are already installed

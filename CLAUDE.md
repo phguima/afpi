@@ -106,8 +106,10 @@ Recipes that worked (image `registry.fedoraproject.org/fedora:44`):
   To run the real `site.yml`: copy the repo into the container, delete `secrets.yml` and use
   `ANSIBLE_BECOME_ASK_PASS=False ansible-playbook site.yml --tags <tag> -e ansible_become=false`.
 - Roles by name (`import_role: name: akmods_mok`) outside `site.yml`: `ANSIBLE_ROLES_PATH=/afpi/roles`.
-- Booleans via `-e` must be JSON (`-e '{"is_nvidia": true}'`). `-e is_nvidia=true` becomes a string
-  and ansible-core 2.20 rejects it in a conditional.
+- Booleans via `-e`: `-e is_nvidia=true` arrives as a string (and wins over set_fact), so every
+  use of the hardware flags (`is_nvidia`, `is_asus`, `is_intel`, `is_amd`) casts with `| bool`;
+  without it ansible-core 2.19+ rejects the string in a conditional. JSON (`-e '{"is_nvidia":
+  true}'`) gives real booleans and works too. Other booleans still need JSON.
 - Fake Secure Boot: mount a directory with `efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c`
   (bytes `06 00 00 00 01` = on, `… 00` = off) **over `/sys/firmware`** with
   `--security-opt unmask=/sys/firmware -v <dir>:/sys/firmware:ro,z`. Mounting a single file inside
