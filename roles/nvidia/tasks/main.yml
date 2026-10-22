@@ -19,7 +19,7 @@
     - name: NVIDIA | Ensure RPM Fusion Non-Free is enabled
       ansible.builtin.dnf:
         name: 
-          - "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+          - "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
         state: present
         disable_gpg_check: yes
 

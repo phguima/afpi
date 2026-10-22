@@ -22,11 +22,13 @@
     - { key: "fastestmirror", value: "{{ dnf_fastestmirror }}" }
   tags: [update]
 
+# Release RPMs come from download1.rpmfusion.org, not mirrors.rpmfusion.org: the redirector sends
+# each file to the same mirror every time, so a dead one fails every retry
 - name: System | Add RPM Fusion repositories
   ansible.builtin.dnf:
     name:
-      - "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
-      - "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+      - "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+      - "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
     state: present
     disable_gpg_check: yes
   tags: [update]
