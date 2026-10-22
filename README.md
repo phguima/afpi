@@ -1,7 +1,10 @@
 # AFPI (Ansible Fedora Post-Install)
 
-[![Project Status: Active](https://img.shields.io/badge/Project%20Status-Active-brightgreen.svg)](#-project-status)
+[![Project Status: Frozen](https://img.shields.io/badge/Project%20Status-Frozen-lightgrey.svg)](#-project-status)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+
+> [!IMPORTANT]
+> **Frozen on October 22, 2026: use [ALPI](https://github.com/phguima/alpi) instead.** ALPI (Ansible Linux Post-Install) unifies AFPI (Fedora) and AAPI (AlmaLinux 10) in one playbook that detects the distribution, and has reached parity with both. This repository stays as it is (2.9.1) for reference: no new features or fixes.
 
 AFPI is a modular and intelligent system for Fedora Workstation post-installation (Validated on Fedora 41-44). It uses an architecture based on **Roles** and environment-aware variables (Jinja2), allowing your desktop customization and hardware optimizations to be applied consistently, making your workstation deployment fully automated and "hardware-aware".
 
